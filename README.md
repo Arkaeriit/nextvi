@@ -721,6 +721,7 @@ Programming
 -------------
 Kyryl Melekhin (kyx0r)  
 Ali Gholami Rudi (aligrudi)  
+Maxime Bouillot (Arkaeriit)
 
 Documentation / Design / Testing
 -------------
