@@ -1,6 +1,7 @@
 NEXTVI
 ======
 Nextvi is a vi/ex editor. It can edit bidirectional UTF-8 text.
+This branch is my frok of the original with my patches applied.
 
 NOTICE
 ======
