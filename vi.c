@@ -2123,8 +2123,44 @@ static int setup_signals(void) {
 	return 1;
 }
 
+static void version(void) {
+	printf("Nextvi. Forked by Maxime Bouillot. Originally made by Kyryl Melekhin.\n");
+}
+
+static void help(void) {
+	printf("Nextvi. A vi/ text editor.\n"
+	       "\n"
+	       "Usage:\n"
+	       "    nextvi <options>        : open a new file.\n"
+	       "    nextvi <options> [file] : open the given file.\n"
+	       "    nextvi -h|--help|help   : print this message.\n"
+	       "    nextvi --version        : print the version.\n"
+	       "\n"
+	       "Available options:\n"
+	       "    -s : ???\n"
+	       "    -e : Run in ex mode.\n"
+	       "    -v : Run in vi mode. This overrides `-e`.\n"
+	       "\n"
+	       "You can find more info at https://github.com/Arkaeriit/nextvi."
+	);
+
+
+}
+
 int main(int argc, char *argv[])
 {
+	/* Tries to print help or version */
+	if (argc >= 1) {
+		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "help") || !strcmp(argv[1], "--help")) {
+			help();
+			return 0;
+		}
+		if (!strcmp(argv[1], "--version")) {
+			version();
+			return 0;
+		}
+	}
+	/* Normal operation */
 	int i;
 	char *prog = strchr(argv[0], '/') ? strrchr(argv[0], '/') + 1 : argv[0];
 	xvis = strcmp("ex", prog) && strcmp("neatex", prog);
