@@ -344,7 +344,7 @@ cases than to never even open it. This isn't an excuse, but a deliberate
 design goal, where the user reads the code in order to achieve the full
 control he/she desires.
 
-LOC:
+LOC as of 2022-01-06:
 
 ```
 --------------
@@ -354,10 +354,10 @@ LOC:
 | 644 regex.c|
 | 590 lbuf.c |
 | 1151 ex.c  |
-| 2165 vi.c  |
+| 2183 vi.c  |
 | 776 led.c  |
 | 414 ren.c  |
-| 6947 total |
+| 6965 total |
 --------------
 ```
 
