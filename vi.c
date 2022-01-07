@@ -2132,7 +2132,7 @@ static void help(void) {
 int main(int argc, char *argv[])
 {
 	/* Tries to print help or version */
-	if (argc >= 1) {
+	if (argc > 1) {
 		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "help") || !strcmp(argv[1], "--help")) {
 			help();
 			return 0;
