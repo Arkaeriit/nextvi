@@ -1,7 +1,11 @@
 NEXTVI
 ======
 Nextvi is a vi/ex editor. It can edit bidirectional UTF-8 text.
-This branch is my frok of the original with my patches applied.
+This branch is my fork of the original with my patches applied.
+
+SANBOXED VI
+===========
+This branch (sanboxed vi) is meant to be used as an editor for [Analog City](https://github.com/analogcity/analogcity). It should prevent user for interacting with the rest of the system except for the text currently being edited.
 
 NOTICE
 ======
