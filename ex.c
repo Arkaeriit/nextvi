@@ -439,52 +439,10 @@ static int ec_editapprox(const char *loc, char *cmd, char *arg)
 	return 1;
 }
 
-static int ec_read(const char *loc, char *cmd, char *arg)
-{
-	char msg[EXLEN+32];
-	int beg, end;
-	char *path;
-	char *obuf;
-	int n = lbuf_len(xb);
-	path = arg[0] ? arg : ex_path;
-	if (ex_region(loc, &beg, &end))
-		return 1;
-	if (arg[0] == '!') {
-		int pos = MIN(xrow + 1, lbuf_len(xb));
-		char *ecmd = ex_pathexpand(arg, 1);
-		if (!ecmd)
-			return 1;
-		obuf = cmd_pipe(arg + 1, NULL, 0, 1);
-		if (obuf)
-			lbuf_edit(xb, obuf, pos, pos);
-		free(obuf);
-		free(ecmd);
-	} else {
-		int fd = open(path, O_RDONLY);
-		int pos = lbuf_len(xb) ? end : 0;
-		if (fd < 0) {
-			ex_show("read failed");
-			return 1;
-		}
-		if (lbuf_rd(xb, fd, pos, pos)) {
-			ex_show("read failed");
-			close(fd);
-			return 1;
-		}
-		close(fd);
-	}
-	xrow = end + lbuf_len(xb) - n - 1;
-	snprintf(msg, sizeof(msg), "\"%s\"  %d lines  [r]",
-			path, lbuf_len(xb) - n);
-	ex_show(msg);
-	return 0;
-}
-
 static int ec_write(const char *loc, char *cmd, char *arg)
 {
 	char msg[EXLEN+32];
 	char *path;
-	char *ibuf;
 	int beg, end;
 	path = arg[0] ? arg : ex_path;
 	if (cmd[0] == 'x' && !lbuf_modified(xb))
@@ -495,39 +453,28 @@ static int ec_write(const char *loc, char *cmd, char *arg)
 		beg = 0;
 		end = lbuf_len(xb);
 	}
-	if (arg[0] == '!') {
-		char *ecmd = ex_pathexpand(arg, 1);
-		if (!ecmd)
-			return 1;
-		ibuf = lbuf_cp(xb, beg, end);
-		ex_print(NULL);
-		cmd_pipe(arg + 1, ibuf, 1, 0);
-		free(ecmd);
-		free(ibuf);
-	} else {
-		int fd;
-		if (!strchr(cmd, '!') && ex_path &&
-				!strcmp(ex_path, path) &&
-				mtime(ex_path) > ex_buf->mtime) {
-			ex_show("write failed: file changed");
-			return 1;
-		}
-		if (!strchr(cmd, '!') && arg[0] && mtime(arg) >= 0) {
-			ex_show("write failed: file exists");
-			return 1;
-		}
-		fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, conf_mode());
-		if (fd < 0) {
-			ex_show("write failed: cannot create file");
-			return 1;
-		}
-		if (lbuf_wr(xb, fd, beg, end)) {
-			ex_show("write failed");
-			close(fd);
-			return 1;
-		}
-		close(fd);
+	int fd;
+	if (!strchr(cmd, '!') && ex_path &&
+			!strcmp(ex_path, path) &&
+			mtime(ex_path) > ex_buf->mtime) {
+		ex_show("write failed: file changed");
+		return 1;
 	}
+	if (!strchr(cmd, '!') && arg[0] && mtime(arg) >= 0) {
+		ex_show("write failed: file exists");
+		return 1;
+	}
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, conf_mode());
+	if (fd < 0) {
+		ex_show("write failed: cannot create file");
+		return 1;
+	}
+	if (lbuf_wr(xb, fd, beg, end)) {
+		ex_show("write failed");
+		close(fd);
+		return 1;
+	}
+	close(fd);
 	snprintf(msg, sizeof(msg), "\"%s\"  %d lines  [w]",
 			path, end - beg);
 	ex_show(msg);
@@ -751,34 +698,6 @@ static int ec_substitute(const char *loc, char *cmd, char *arg)
 	return 0;
 }
 
-static int ec_exec(const char *loc, char *cmd, char *arg)
-{
-	int beg, end;
-	char *text, *rep, *ecmd;
-	ex_modifiedbuffer(NULL);
-	if (!(ecmd = ex_pathexpand(arg, 1)))
-		return 1;
-	if (!loc[0]) {
-		int ret;
-		ex_print(NULL);
-		ret = cmd_exec(ecmd);
-		free(ecmd);
-		return ret;
-	}
-	if (ex_region(loc, &beg, &end)) {
-		free(ecmd);
-		return 1;
-	}
-	text = lbuf_cp(xb, beg, end);
-	rep = cmd_pipe(ecmd, text, 1, 1);
-	if (rep)
-		lbuf_edit(xb, rep, beg, end);
-	free(ecmd);
-	free(text);
-	free(rep);
-	return 0;
-}
-
 static int ec_ft(const char *loc, char *cmd, char *arg)
 {
 	if (arg[0])
@@ -994,10 +913,8 @@ static struct excmd {
 	{"pu", ec_put},
 	{"q", ec_quit},
 	{"q!", ec_quit},
-	{"r", ec_read},
 	{"v", ec_glob},
 	{"w", ec_write},
-	{"w!", ec_write},
 	{"wq", ec_write},
 	{"wq!", ec_write},
 	{"u", ec_undo},
@@ -1005,9 +922,7 @@ static struct excmd {
 	{"se", ec_set},
 	{"s", ec_substitute},
 	{"x", ec_write},
-	{"x!", ec_write},
 	{"ya", ec_yank},
-	{"!", ec_exec},
 	{"ft", ec_ft},
 	{"cm", ec_cmap},
 	{"cm!", ec_cmap},

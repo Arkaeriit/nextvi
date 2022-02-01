@@ -1150,22 +1150,6 @@ static void vi_case(int r1, int o1, int r2, int o2, int lnmode, int cmd)
 	free(post);
 }
 
-static void vi_pipe(int r1, int r2)
-{
-	char *text, *rep;
-	int kmap = 0;
-	char *cmd = vi_prompt("!", 0, &kmap);
-	if (!cmd)
-		return;
-	text = lbuf_cp(xb, r1, r2 + 1);
-	rep = cmd_pipe(cmd, text, 1, 1);
-	if (rep)
-		lbuf_edit(xb, rep, r1, r2 + 1);
-	free(cmd);
-	free(text);
-	free(rep);
-}
-
 static void vi_shift(int r1, int r2, int dir)
 {
 	sbuf *sb; sbuf_make(sb, 1024)
@@ -1228,8 +1212,6 @@ static int vc_motion(int cmd)
 		vi_change(r1, o1, r2, o2, lnmode);
 	if (cmd == '~' || cmd == 'u' || cmd == 'U')
 		vi_case(r1, o1, r2, o2, lnmode, cmd);
-	if (cmd == '!')
-		vi_pipe(r1, r2);
 	if (cmd == '>' || cmd == '<')
 		vi_shift(r1, r2, cmd == '>' ? +1 : -1);
 	if (cmd == TK_CTL('w'))
