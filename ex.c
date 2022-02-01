@@ -445,6 +445,10 @@ static int ec_write(const char *loc, char *cmd, char *arg)
 	char *path;
 	int beg, end;
 	path = arg[0] ? arg : ex_path;
+	if (strcmp(path, ex_path)) {
+		ex_show("Unauthorized to write to a new file.\n");
+		return 1;
+	}
 	if (cmd[0] == 'x' && !lbuf_modified(xb))
 		return ec_quit("", cmd, "");
 	if (ex_region(loc, &beg, &end))
