@@ -907,8 +907,6 @@ static struct excmd {
 	{"i", ec_insert},
 	{"d", ec_delete},
 	{"c", ec_insert},
-	{"e", ec_edit},
-	{"e!", ec_edit},
 	{"g", ec_glob},
 	{"g!", ec_glob},
 	{"=", ec_lnum},
