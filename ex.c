@@ -458,12 +458,6 @@ static int ec_write(const char *loc, char *cmd, char *arg)
 		end = lbuf_len(xb);
 	}
 	int fd;
-	if (!strchr(cmd, '!') && ex_path &&
-			!strcmp(ex_path, path) &&
-			mtime(ex_path) > ex_buf->mtime) {
-		ex_show("write failed: file changed");
-		return 1;
-	}
 	if (!strchr(cmd, '!') && arg[0] && mtime(arg) >= 0) {
 		ex_show("write failed: file exists");
 		return 1;

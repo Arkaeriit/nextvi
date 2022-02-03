@@ -9,6 +9,8 @@ If something is listed here, it must be used across multiple
 files and thus is never static.
 */
 
+#define TXT_MAX_SIZE 1024
+
 /* helper macros */
 #define LEN(a)		(int)(sizeof(a) / sizeof((a)[0]))
 #define MIN(a, b)	((a) < (b) ? (a) : (b))

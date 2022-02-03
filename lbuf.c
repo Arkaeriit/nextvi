@@ -227,8 +227,20 @@ int lbuf_rd(struct lbuf *lbuf, int fd, int beg, int end)
 	return nr != 0;
 }
 
+int buff_size(const struct lbuf *lbuf)
+{
+	int ret = 0;
+	for(int i=0; i<lbuf->ln_n; i++) {
+		ret += strlen(lbuf->ln[i]);
+	}
+	return ret;
+}
+
 int lbuf_wr(struct lbuf *lbuf, int fd, int beg, int end)
 {
+	if (buff_size(lbuf) > TXT_MAX_SIZE) {
+		return 1;
+	}
 	for (int i = beg; i < end; i++) {
 		char *ln = lbuf->ln[i];
 		long nw = 0;

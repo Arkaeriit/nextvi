@@ -5,7 +5,13 @@ This branch is my fork of the original with my patches applied.
 
 SANBOXED VI
 ===========
-This branch (sanboxed vi) is meant to be used as an editor for [Analog City](https://github.com/analogcity/analogcity). It should prevent user for interacting with the rest of the system except for the text currently being edited.
+This branch (sanboxed vi) is meant to be used as an editor for
+[Analog City](https://github.com/analogcity/analogcity). It should prevent user
+for interacting with the rest of the system except for the text currently being
+edited.
+
+Furthermore, the max size of the file writable is limited to 1024 bytes as
+specified in by the constant `TXT_MAX_SIZE` defined in the file `vi.h`.
 
 NOTICE
 ======
