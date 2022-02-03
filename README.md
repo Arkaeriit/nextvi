@@ -16,9 +16,68 @@ the box. The notable changes that I am referring to (see below): 56, 60, 61.
 Some keybinds specified by POSIX were not implemented in original neatvi,
 nextvi might use them for some features below.
 
-FEATURES & CHANGES
-------------------
+NEATVI FEATURES
+---------------
+- ex options:
+can be set using :se option or :se option=value
+can be unset using :se nooption
+td
+  Current direction context.  The following values are meaningful:
+  * +2: always left-to-right.
+  * +1: follow conf.c's dircontexts[]; left-to-right for others.
+  * -1: follow conf.c's dircontexts[]; right-to-left for others.
+  * -2: always right-to-left.
+shape
+  If set (default), performs Arabic/Farsi letter shaping.
+order
+  If set, reorder characters based on the rules defined
+  in conf.c.
+hl
+  If set (default), text will be highlighted based on syntax
+  highlighting rules in conf.c.
+hll
+  If set, highlight current line.
+ai
+  As in vi(1).
+aw
+  As in vi(1).
+ic
+  As in vi(1).
 
+- special marks:
+* the position of the previous change
+[ the first line of the previous change
+] the last line of the previous change
+
+- special yank buffers:
+/ the previous search keyword
+: the previous ex command
+
+- ex commands:
+:cm[ap][!] [kmap]
+Without kmap, prints the current keymap name. When kmap is specified, sets
+the alternate keymap to kmap and, unless ! is given, switches to this keymap.
+:ft [filetype]
+Without filetype, prints the current file type. When filetype is specified,
+sets the file type of the current ex buffer.
+In nextvi :ft also reloads the highlight ft, which makes it possible to reset
+dynamic highlights created by options like "hlw".
+
+- new key mappings (normal):
+^a searches for the word under the cursor.
+zL, zl, zr, and zR change the value of td option.
+ze and zf switch to the English and alternate keymap.
+gu, gU, and g~ switch character case.
+^l updates terminal dimensions and redraws the screen.
+
+- new key mappings (insert):
+^p inserts the contents of the default yank buffer.
+^e and ^f switch to the English and alternate keymap.
+
+`vi(1)` - for features unspecified refer to the respective page in the POSIX manual.
+
+NEXTVI FEATURES & CHANGES
+-------------------------
 1. Added unindent keybind: ^w
 ^w may also take `vi_arg1` or motions as a region.
 2. Added quickexit to insert mode keybind: kj
@@ -138,9 +197,13 @@ word filtering regex. You can find it's string in led.c as a reference.
 Using ^b from insert mode will display all possible autocomplete options.
 Added new ex option "pac". When enabled the autocomplete options will
 be automatically displayed.
-32. Added ex command "inc" which sets the path filter using regex. For
-example we want to get only files in submodule directory that end
-with .c extension, use: `:inc submodule.*\.c$`
+32. Added ex command "inc" which sets the path filter using regex.
+Example 1:
+We want to get only files in submodule directory that end with .c extension:
+`:inc submodule.*\.c$`
+Example 2:
+Exclude the .git folder filled with useless clutter.
+`:inc (^[^&&.git]+[^\/]+$)\\|(<optional branch for exceptions here>)`
 Running "inc" without an arg will disable all filters.
 33. Added file manager keybind: `\`
 Commands listed below under (33.) will work everywhere in vi.
@@ -325,6 +388,96 @@ substitution command, properly counting number of groups in rset.
    rule(regex:"\|" = "|") "\\|" = this is the literal we wanted to match!
 ```
 
+LESSER KNOWN FEATURES
+---------------------
+- "Ever tried reading the source code?"
+Yes, that is a lesser known feature, what did you expect?
+Jokes aside (with a level of truth to it), these features exist in many other
+vi implementations but neither man pages cover their functionality in an
+understandable language, describe it here instead.
+
+- @@ macros:
+1. Type out the macro or load from file such that it is in some vi buffer.
+2. Use keybind "ayy on the macro, this will store it in register 'a'
+3. Use @a to play it back, where a stands for that 'a' register
+4. @@ repeats the last macro on next line
+
+- substitution backreference:
+This inserts the text of matched group specified by \x where x is
+group number. Example:
+this is an example text for subs and has int or void
+:%s/(int)\\|(void)/pre\0after
+this is an example text for subs and has preintafter or void
+:%s/(int)\\|(void)/pre\2after/g
+this is an example text for subs and has prepreafterafter or prevoidafter
+
+- ex global command:
+same syntax as ex substitution command, but instead of replacement
+string it takes an ex command after the / / enclosed regex.
+Example: remove empty lines
+:g/^$/d
+Try doing similar with substitution command - will not work as removing '\n'
+without deleting the line is invalid, but it will work with global command.
+
+- search motions:
+? and / searches have the ability to be used as motions. This seems very
+counter intuitive and one would have never ever figure out that this
+feature even exists, unless noted. Even if you read the source code it's
+very easy to miss. How to use: optionally specify vi_arg1, specify the motion
+using it's keybind, then do / or ? and type out the search term.
+The motion ends on the first match by default (no vi_arg1 specified).
+The optional vi_arg1 determines how many matches of the term to skip until the
+motion ends. Example: you see that the next 10 lines have the word "int"
+which is included 3 times. You want to delete text until the 3rd
+instance of "int" keybind would be 3d/int . Likewise you can opt out
+of the "specify motion" part and just use / or ? with vi_arg1 to perform
+specific searches.
+
+- Majestic EXINIT environment variable
+At the zenith of your vi/nextvi education you'll find that EXINIT can be
+used to achieve arbitrary level of customization. Using new ex command "tp"
+any sequence of vi/ex commands can be performed at startup. This is where
+real "groking vi" starts.
+Example 1:
+There is a dictionary file (assume vi.c), which we always want to have indexed
+at startup for autocomplete feature in 31.
+export EXINIT="e ./vi.c|tp i|u|bx 1|bx"
+The last "bx" commands delete the vi.c buffer. "u" can be used to unmark vi.c
+as being modified. To keep it around as a buffer remove the "bx" commands.
+Example 2:
+Load your shell's history into vi's history buffer and adjust the data such
+that it is usable by appending ! at the beginning of command and escaping the "|"
+pipes the way ex prompt expects them (see 61.)
+export EXINIT="e /root/.ash_history|tp yG:p:%s/^/!\\\|%s/ \\| / \\\\\\\| /g
+qq|bx 1|bx|ft"
+Congratulations, vi has unofficially replaced your shell's frontend.
+Example 3:
+Setup some custom @@ macros in your favorite registers.
+export EXINIT="e|tp io{
+}kA|tp 1G|tp 2\"ayy"
+This macro gets loaded into register a, when @a is executed the macro will
+create { and closing } below the cursor leaving cursor in insert mode in
+between the braces. This is something you would commonly do in C like
+programming language.
+ - CRITICAL - the new line inside the EXINIT string is literal, it's best to
+   store the export command in a .sh file and set it using:
+   $ . ./init.sh
+   Otherwise this examples 2 and 3 may not work!!!
+
+- Uppercase registers
+In vi uppercase registers append to the lowercase register instead of
+overwriting the register completely. This is very useful, for example,
+use global and yank ex commands together:
+:g/searchterm/ya A
+Now we can use "ap and paste all the lines matched by the regex. Depending
+on the usecase simply :g/searchterm/ya or :g/searchterm/p may also be enough.
+
+PATCHES
+-------
+New functionality can be obtained through optional patches provided in the 
+patches branch. If you have a meaningful contribution and would love to be
+made public the patch can be submitted via email or github pull request.
+
 FAQ:
 ----
 
@@ -345,21 +498,24 @@ cases than to never even open it. This isn't an excuse, but a deliberate
 design goal, where the user reads the code in order to achieve the full
 control he/she desires.
 
-LOC as of 2022-01-06:
+LOC as of 2022-02-03:
 
 ```
---------------
-| 579 uc.c   |
-| 332 term.c |
-| 296 conf.c |
-| 644 regex.c|
-| 590 lbuf.c |
-| 1151 ex.c  |
-| 2183 vi.c  |
-| 776 led.c  |
-| 414 ren.c  |
-| 6965 total |
---------------
++--------------+---------------------+
+| 569  kmap.h  | keymap translation  |
+| 422  vi.h    | definitions/aux     |
++--------------+---------------------+
+| 579  uc.c    | UTF-8 support       |
+| 332  term.c  | low level IO        |
+| 296  conf.c  | hl/ft/td config     |
+| 643  regex.c | extended RE         |
+| 590  lbuf.c  | file/line buffer    |
+| 1149 ex.c    | ex options/commands |
+| 2184 vi.c    | normal mode/general |
+| 776  led.c   | insert mode/output  |
+| 414  ren.c   | positioning/syntax  |
+| 6963 total   | wc -l *.c           |
++--------------+---------------------+
 ```
 
 The code is devised to be unquestionable.
@@ -646,6 +802,13 @@ Stress test:
 3. Capture the results with cachegrind
 4. To find out what these values mean see:
 https://valgrind.org/docs/manual/cg-manual.html
+5. To create the most optimal exe, enable PGO optimizations by compling via
+./build.sh pgobuild which can lead to a significant performance boost on some
+application specific tasks. Feel free to adjust build.sh and the sample data
+on which it's being trained on, though default probably already good enough.
+6. To improve nextvi's performance, shaping, character reordering, and
+syntax highlighting can be disabled by defining the EXINIT environment
+variable as "se noshape | se noorder | se nohl | se td=+2".
 
 ```
 NEATVI (5e1f787eec332dcdf9f3608c0745551d5de72ad4):
@@ -741,3 +904,4 @@ aabacchus (build.sh)
 illiliti (build.sh)  
 git-bruh (feedback)  
 and all users, posters & haters :/  
+

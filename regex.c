@@ -275,7 +275,7 @@ int re_comp(rcode *prog, const char *re, int nsubs, int flags)
 	if (res < 0) return res;
 	/* If unparsed chars left */
 	if (*re) return RE_SYNTAX_ERROR;
-	int icnt = 0, scnt = SPLIT + 1;
+	int icnt = 0, scnt = SPLIT;
 	for (int i = 0; i < prog->unilen; i++)
 		switch (prog->insts[i]) {
 		case CLASS:
@@ -316,11 +316,10 @@ else \
 #define onclist(nn)
 #define onnlist(nn) \
 if (sdense[spc] < sparsesz) \
-	if (sdense[sdense[spc]] == (unsigned int)spc) \
+	if (sdense[sdense[spc] * 2] == (unsigned int)spc) \
 		deccheck(nn) \
 sdense[spc] = sparsesz; \
-sdense[sparsesz] = spc; \
-sparsesz += 2; \
+sdense[sparsesz++ * 2] = spc; \
 
 #define decref(csub) \
 if (--csub->ref == 0) { \
@@ -328,8 +327,14 @@ if (--csub->ref == 0) { \
 	freesub = csub; \
 } \
 
-#define deccheck(nn) \
-{ decref(nsub) goto rec_check##nn; } \
+#define rec_check(nn) \
+if (si) { \
+	npc = pcs[--si]; \
+	nsub = subs[si]; \
+	goto rec##nn; \
+} \
+
+#define deccheck(nn) { decref(nsub) rec_check(nn) continue; } \
 
 #define fastrec(nn, list, listidx) \
 nsub->ref++; \
@@ -379,18 +384,12 @@ if (spc == MATCH) \
 	} \
 
 #define addthread(n, nn, list, listidx) \
-si = 0; \
 rec##nn: \
 spc = *npc; \
 if ((unsigned int)spc < WBEG) { \
 	list[listidx].sub = nsub; \
 	list[listidx++].pc = npc; \
-	rec_check##nn: \
-	if (si) { \
-		npc = pcs[--si]; \
-		nsub = subs[si]; \
-		goto rec##nn; \
-	} \
+	rec_check(nn) \
 	list##match(n) \
 	continue; \
 } \
@@ -445,7 +444,7 @@ clistidx = nlistidx; \
 for (;; sp = _sp) { \
 	uc_len(i, sp) uc_code(c, sp) cpn \
 	_sp = sp+i;\
-	nlistidx = 0, sparsesz = SPLIT; \
+	nlistidx = 0, sparsesz = 0; \
 	for (i = 0; i < clistidx; i++) { \
 		npc = clist[i].pc; \
 		nsub = clist[i].sub; \
@@ -520,8 +519,8 @@ int re_pikevm(rcode *prog, const char *s, const char **subp, int nsubp, int flg)
 		return 0;
 	const char *sp = s, *_sp = s;
 	int rsubsize = sizeof(rsub)+(sizeof(char*)*nsubp);
-	int si, i, j, c, suboff = rsubsize, *npc, osubp = nsubp * sizeof(char*);
-	int clistidx = 0, nlistidx, spc, mcont = MATCH;
+	int i, j, c, suboff = rsubsize, *npc, osubp = nsubp * sizeof(char*);
+	int si = 0, clistidx = 0, nlistidx, spc, mcont = MATCH;
 	int *insts = prog->insts, eol_ch = flg & REG_NEWLINE ? '\n' : 0;
 	int *pcs[prog->splits];
 	unsigned int sdense[prog->splits * 2], sparsesz;
