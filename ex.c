@@ -467,7 +467,11 @@ static int ec_write(const char *loc, char *cmd, char *arg)
 		ex_show("write failed: cannot create file");
 		return 1;
 	}
-	if (lbuf_wr(xb, fd, beg, end)) {
+	int lbuf_wr_rc = lbuf_wr(xb, fd, beg, end);
+    if (lbuf_wr_rc == 2) {
+		ex_show("Error, unable to write files larger than " STR(TXT_MAX_SIZE) " bytes.\n");
+		return 1;
+	} else if (lbuf_wr_rc) {
 		ex_show("write failed");
 		close(fd);
 		return 1;

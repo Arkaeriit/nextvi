@@ -11,7 +11,9 @@ for interacting with the rest of the system except for the text currently being
 edited.
 
 Furthermore, the max size of the file writable is limited to 1024 bytes as
-specified in by the constant `TXT_MAX_SIZE` defined in the file `vi.h`.
+specified in by the constant `TXT_MAX_SIZE` defined in the file `vi.h`. The
+size of the buffers are also limited to prevent malicious users to use too
+much memory.
 
 NOTICE
 ======

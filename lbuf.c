@@ -68,6 +68,15 @@ static void lbuf_loadmark(struct lbuf *lb, struct lopt *lo, int m)
 	}
 }
 
+static int buff_size(const struct lbuf *lbuf)
+{
+	int ret = 0;
+	for(int i=0; i<lbuf->ln_n; i++) {
+		ret += strlen(lbuf->ln[i]);
+	}
+	return ret;
+}
+
 static int markidx(int mark)
 {
 	if (islower(mark))
@@ -172,6 +181,10 @@ static void lbuf_replace(struct lbuf *lb, char *s, int pos, int n_del, int n_ins
 	}
 	lbuf_mark(lb, '[', pos, 0);
 	lbuf_mark(lb, ']', pos + (n_ins ? n_ins - 1 : 0), 0);
+	if (buff_size(lb) > BUF_MAX_SIZE) {
+		lbuf_undo(lb);
+		lb->hist_u++;
+	}
 }
 
 /* append undo/redo history; return linecount */
@@ -227,19 +240,10 @@ int lbuf_rd(struct lbuf *lbuf, int fd, int beg, int end)
 	return nr != 0;
 }
 
-int buff_size(const struct lbuf *lbuf)
-{
-	int ret = 0;
-	for(int i=0; i<lbuf->ln_n; i++) {
-		ret += strlen(lbuf->ln[i]);
-	}
-	return ret;
-}
-
 int lbuf_wr(struct lbuf *lbuf, int fd, int beg, int end)
 {
 	if (buff_size(lbuf) > TXT_MAX_SIZE) {
-		return 1;
+		return 2;
 	}
 	for (int i = beg; i < end; i++) {
 		char *ln = lbuf->ln[i];

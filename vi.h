@@ -10,11 +10,14 @@ files and thus is never static.
 */
 
 #define TXT_MAX_SIZE 1024
+#define BUF_MAX_SIZE 2048
 
 /* helper macros */
 #define LEN(a)		(int)(sizeof(a) / sizeof((a)[0]))
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #define MAX(a, b)	((a) < (b) ? (b) : (a))
+#define _STR(macro) #macro
+#define STR(macro) _STR(macro)
 /* for debug; printf() but to file */
 #define p(s, ...)\
 	{FILE *f = fopen("file", "a");\
