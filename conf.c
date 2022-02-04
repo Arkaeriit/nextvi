@@ -1,3 +1,4 @@
+#include "vi.h"
 /* nextvi configuration file */
 #include "kmap.h"
 

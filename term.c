@@ -1,3 +1,5 @@
+#include "vi.h"
+
 sbuf *term_sbuf;
 int term_record;
 static int rows, cols;

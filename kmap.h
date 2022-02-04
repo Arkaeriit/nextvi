@@ -1,3 +1,6 @@
+#ifndef KMAP_H
+#define KMAP_H
+
 static char *kmap_en[256] = {
 	[0] = "en",
 };
@@ -567,3 +570,6 @@ static char *digraphs[][2] = {
 	{"ffl", "ﬄ"},
 	{"Fl", "ﬄ"},
 };
+
+#endif
+

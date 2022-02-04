@@ -1,3 +1,5 @@
+#include "vi.h"
+
 /* line editing and drawing */
 
 typedef struct tern {

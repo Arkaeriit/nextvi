@@ -1,3 +1,6 @@
+#ifndef VI_H
+#define VI_H
+
 /*
 Nextvi main header
 ==================
@@ -8,6 +11,23 @@ Nextvi. They are kept here for your benefit and organization.
 If something is listed here, it must be used across multiple
 files and thus is never static.
 */
+
+/* System headers */
+#include <ctype.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <signal.h>
+#include <unistd.h>
+#include <time.h>
+#include <poll.h>
+#include <termios.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/wait.h>
 
 /* helper macros */
 #define LEN(a)		(int)(sizeof(a) / sizeof((a)[0]))
@@ -419,4 +439,6 @@ extern int fspos;
 extern int fscount;
 extern int vi_hidch;
 extern int vi_insmov;
+
+#endif
 

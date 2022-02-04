@@ -1,3 +1,5 @@
+#include "vi.h"
+
 /* rendering strings */
 
 static rset *dir_rslr;	/* pattern of marks for left-to-right strings */

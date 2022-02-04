@@ -1,3 +1,5 @@
+#include "vi.h"
+
 #define NMARKS_BASE		('z' - 'a' + 2)
 #define NMARKS			32
 

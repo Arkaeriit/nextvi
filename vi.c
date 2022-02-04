@@ -1,27 +1,4 @@
-#include <ctype.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <signal.h>
-#include <unistd.h>
-#include <time.h>
-#include <poll.h>
-#include <termios.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/wait.h>
 #include "vi.h"
-#include "conf.c"
-#include "ex.c"
-#include "lbuf.c"
-#include "led.c"
-#include "regex.c"
-#include "ren.c"
-#include "term.c"
-#include "uc.c"
 
 int vi_hidch;		/* show hidden chars */
 int vi_insmov;		/* moving in insert outside of insertion sbuf */

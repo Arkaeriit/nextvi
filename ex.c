@@ -1,3 +1,5 @@
+#include "vi.h"
+
 int xrow, xoff, xtop;		/* current row, column, and top row */
 int xleft;			/* the first visible column */
 int xquit;			/* exit if set */

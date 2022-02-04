@@ -1,3 +1,5 @@
+#include "vi.h"
+
 static int isword(const char *s)
 {
 	int c = (unsigned char) s[0];
