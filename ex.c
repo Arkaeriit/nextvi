@@ -1,3 +1,11 @@
+#include "conf.h"
+#include "ex.h"
+#include "lbuf.h"
+#include "ren.h"
+#include "term.h"
+#include "uc.h"
+#include "led.h"
+#include "helper.h"
 #include "vi.h"
 
 int xrow, xoff, xtop;		/* current row, column, and top row */

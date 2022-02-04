@@ -1,4 +1,8 @@
 #include "vi.h"
+#include "ex.h"
+#include "lbuf.h"
+#include "ren.h"
+#include "uc.h"
 
 #define NMARKS_BASE		('z' - 'a' + 2)
 #define NMARKS			32

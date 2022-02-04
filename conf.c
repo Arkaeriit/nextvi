@@ -1,6 +1,8 @@
-#include "vi.h"
 /* nextvi configuration file */
 #include "kmap.h"
+#include "conf.h"
+#include "ren.h"
+#include "helper.h"
 
 /* access mode of new files */
 #define MKFILE_MODE		0600

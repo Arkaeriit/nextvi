@@ -1,4 +1,11 @@
 #include "vi.h"
+#include "ex.h"
+#include "conf.h"
+#include "lbuf.h"
+#include "led.h"
+#include "ren.h"
+#include "term.h"
+#include "uc.h"
 
 /* line editing and drawing */
 

@@ -1,4 +1,8 @@
 #include "vi.h"
+#include "ex.h"
+#include "conf.h"
+#include "ren.h"
+#include "uc.h"
 
 /* rendering strings */
 

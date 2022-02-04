@@ -1,4 +1,6 @@
 #include "vi.h"
+#include "nextvi_regex.h"
+#include "uc.h"
 
 static int isword(const char *s)
 {

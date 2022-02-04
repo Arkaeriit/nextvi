@@ -1,4 +1,10 @@
 #include "vi.h"
+#include "ex.h"
+#include "lbuf.h"
+#include "led.h"
+#include "ren.h"
+#include "term.h"
+#include "uc.h"
 
 int vi_hidch;		/* show hidden chars */
 int vi_insmov;		/* moving in insert outside of insertion sbuf */

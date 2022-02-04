@@ -1,4 +1,7 @@
 #include "vi.h"
+#include "ex.h"
+#include "ren.h"
+#include "term.h"
 
 sbuf *term_sbuf;
 int term_record;
