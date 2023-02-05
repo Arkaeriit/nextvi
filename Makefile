@@ -18,10 +18,10 @@ RM := rm -rf
 all: vi ex
 
 %.o : %.c $(C_HEAD)
-	$(CC) -c $< $(FLAGS) -o $@
+	$(CC) -c $< $(CFLAGS) -o $@
 
 vi: $(C_OBJS)
-	$(CC) $(C_OBJS) $(FLAGS) -o $@
+	$(CC) $(C_OBJS) $(CFLAGS) -o $@
 
 ex: vi
 	cp vi ex
