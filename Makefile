@@ -1,5 +1,5 @@
 # Flags
-CFLAGS += -Wpedantic -Wall -Wextra -Wno-implicit-fallthrough -Wno-missing-field-initializers -Wno-unused-parameter -Wfatal-errors -std=c99 -D_POSIX_C_SOURCE=200809L -Werror
+CFLAGS += -Wpedantic -Wall -Wextra -Wno-implicit-fallthrough -Wno-missing-field-initializers -Wno-unused-parameter -Wfatal-errors -std=c99 -D_POSIX_C_SOURCE=200809L -Werror -O2
 
 
 # Files lists
