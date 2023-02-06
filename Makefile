@@ -48,4 +48,3 @@ clean :
 	$(RM) vi
 	$(RM) ex
 	$(RM) *.o
-
