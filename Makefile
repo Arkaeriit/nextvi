@@ -15,7 +15,7 @@ C_HEAD := $(C_SRC:%.c=%.h) kmap.h helper.h
 C_OBJS := $(C_SRC:%.c=%.o)
 
 # Install targets
-TARGET_DIR_BIN ?= /usr/local/bin
+DESTDIR ?= /usr/local/bin
 
 # Commands
 CC := gcc
@@ -36,13 +36,13 @@ ex: vi
 	cp vi ex
 
 install : | vi ex
-	mkdir -p $(TARGET_DIR_BIN)
-	$(INSTALL) vi $(TARGET_DIR_BIN)/
-	$(LN) vi $(TARGET_DIR_BIN)/ex
+	mkdir -p $(DESTDIR)
+	$(INSTALL) vi $(DESTDIR)/
+	$(LN) vi $(DESTDIR)/ex
 
 uninstall :
-	$(RM) $(TARGET_DIR_BIN)/ex
-	$(RM) $(TARGET_DIR_BIN)/vi
+	$(RM) $(DESTDIR)/ex
+	$(RM) $(DESTDIR)/vi
 
 clean : 
 	$(RM) vi
