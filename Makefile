@@ -18,6 +18,7 @@ TARGET_DIR_BIN ?= /usr/local/bin
 CC := gcc
 CP := cp -f
 RM := rm -rf
+LN := ln -sf
 
 all: vi ex
 
@@ -32,7 +33,8 @@ ex: vi
 
 install : | vi ex
 	mkdir -p $(TARGET_DIR_BIN)
-	$(CP) vi ex $(TARGET_DIR_BIN)/
+	$(CP) vi $(TARGET_DIR_BIN)/
+	$(LN) vi $(TARGET_DIR_BIN)/ex
 
 uninstall :
 	$(RM) $(TARGET_DIR_BIN)/ex
