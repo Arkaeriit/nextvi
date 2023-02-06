@@ -2,4 +2,5 @@ cscope.out
 *.o
 tags
 vi
+ex
 file
