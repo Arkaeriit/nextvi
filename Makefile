@@ -5,6 +5,9 @@ OS := $(shell uname -s)
 ifeq ($(OS),Darwin)
 	CFLAGS += -D_DARWIN_C_SOURCE
 endif
+ifdef MARCHNATIVE
+	CFLAGS += -march=native # useful for people who dont share binaries
+endif
 
 # Files lists
 C_SRC := conf.c ex.c lbuf.c led.c nextvi_regex.c ren.c term.c uc.c vi.c
@@ -19,6 +22,7 @@ CC := gcc
 CP := cp -f
 RM := rm -rf
 LN := ln -sf
+INSTALL := install -s
 
 all: vi ex
 
@@ -33,7 +37,7 @@ ex: vi
 
 install : | vi ex
 	mkdir -p $(TARGET_DIR_BIN)
-	$(CP) vi $(TARGET_DIR_BIN)/
+	$(INSTALL) vi $(TARGET_DIR_BIN)/
 	$(LN) vi $(TARGET_DIR_BIN)/ex
 
 uninstall :
