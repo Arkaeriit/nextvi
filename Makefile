@@ -20,7 +20,7 @@ DESTDIR ?= /usr/local/bin
 # Commands
 CC := gcc
 RM := rm -rf
-LN := ln -sf
+LN := ln -f
 INSTALL := install -s
 
 all: vi ex
@@ -37,7 +37,7 @@ ex: vi
 install : | vi ex
 	mkdir -p $(DESTDIR)
 	$(INSTALL) vi $(DESTDIR)/
-	$(LN) vi $(DESTDIR)/ex
+	$(LN) $(DESTDIR)/vi $(DESTDIR)/ex
 
 uninstall :
 	$(RM) $(DESTDIR)/ex
