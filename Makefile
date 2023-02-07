@@ -33,7 +33,7 @@ vi: $(C_OBJS)
 	$(CC) $(C_OBJS) $(CFLAGS) -o $@
 
 ex: vi
-	cp vi ex
+	$(LN) vi ex
 
 install : | vi ex
 	mkdir -p $(DESTDIR)
