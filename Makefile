@@ -5,6 +5,9 @@ OS := $(shell uname -s)
 ifeq ($(OS),Darwin)
 	CFLAGS += -D_DARWIN_C_SOURCE
 endif
+ifdef MARCHNATIVE
+	CFLAGS += -march=native # Optimize for the current CPU, useful for people who don't share their binaries
+endif
 
 # Files lists
 C_SRC := conf.c ex.c lbuf.c led.c nextvi_regex.c ren.c term.c uc.c vi.c
@@ -12,12 +15,14 @@ C_HEAD := $(C_SRC:%.c=%.h) kmap.h helper.h
 C_OBJS := $(C_SRC:%.c=%.o)
 
 # Install targets
-TARGET_DIR_BIN ?= /usr/local/bin
+DESTDIR ?= /usr/local/bin
 
 # Commands
 CC := gcc
 CP := cp -f
 RM := rm -rf
+LN := ln -f
+STRIP := strip
 
 all: vi ex
 
@@ -28,18 +33,19 @@ vi: $(C_OBJS)
 	$(CC) $(C_OBJS) $(CFLAGS) -o $@
 
 ex: vi
-	cp vi ex
+	$(LN) vi ex
 
 install : | vi ex
-	mkdir -p $(TARGET_DIR_BIN)
-	$(CP) vi ex $(TARGET_DIR_BIN)/
+	mkdir -p $(DESTDIR)
+	$(CP) vi $(DESTDIR)/
+	$(STRIP) $(DESTDIR)/vi
+	$(LN) $(DESTDIR)/vi $(DESTDIR)/ex
 
 uninstall :
-	$(RM) $(TARGET_DIR_BIN)/ex
-	$(RM) $(TARGET_DIR_BIN)/vi
+	$(RM) $(DESTDIR)/ex
+	$(RM) $(DESTDIR)/vi
 
 clean : 
 	$(RM) vi
 	$(RM) ex
 	$(RM) *.o
-
