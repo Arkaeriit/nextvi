@@ -6,7 +6,7 @@ ifeq ($(OS),Darwin)
 	CFLAGS += -D_DARWIN_C_SOURCE
 endif
 ifdef MARCHNATIVE
-	CFLAGS += -march=native # useful for people who dont share binaries
+	CFLAGS += -march=native # Optimize for the current CPU, useful for people who don't share their binaries
 endif
 
 # Files lists
