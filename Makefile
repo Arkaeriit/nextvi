@@ -19,7 +19,6 @@ DESTDIR ?= /usr/local/bin
 
 # Commands
 CC := gcc
-CP := cp -f
 RM := rm -rf
 LN := ln -sf
 INSTALL := install -s
