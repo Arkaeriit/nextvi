@@ -18,7 +18,7 @@ C_OBJS := $(C_SRC:%.c=%.o)
 PREFIX ?= /usr/local
 
 # Commands
-CC := gcc
+CC := cc
 CP := cp -f
 RM := rm -rf
 LN := ln -f
