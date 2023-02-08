@@ -18,7 +18,17 @@ C_OBJS := $(C_SRC:%.c=%.o)
 PREFIX ?= /usr/local
 
 # Commands
-CC := $(CROSS_COMPILE)cc
+HASGCC := $(shell command -v $(CROSS_COMPILE)gcc 2> /dev/null)
+HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
+ifdef HASGCC
+	CC := $(CROSS_COMPILE)gcc
+else
+	ifdef HASCLANG
+		CC := $(CROSS_COMPILE)clang
+	else
+		CC := $(CROSS_COMPILE)cc
+	endif
+endif
 CP := cp -f
 RM := rm -rf
 LN := ln -f
