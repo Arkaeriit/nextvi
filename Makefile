@@ -29,9 +29,12 @@ else
 		CC := $(CROSS_COMPILE)cc
 	endif
 endif
-CP := cp -f
 RM := rm -rf
-LN := ln -f
+ifeq $(shell uname -o),Android)
+	CP := cp -f
+else
+	CP := cp -lf
+endif
 STRIP := $(CROSS_COMPILE)strip
 
 all: vi ex
@@ -43,13 +46,13 @@ vi: $(C_OBJS)
 	$(CC) $(C_OBJS) $(CFLAGS) -o $@
 
 ex: vi
-	$(LN) vi ex
+	$(CP) vi ex
 
 install : | vi ex
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	$(CP) vi $(DESTDIR)$(PREFIX)/bin/
 	$(STRIP) $(DESTDIR)$(PREFIX)/bin/vi
-	$(LN) $(DESTDIR)$(PREFIX)/bin/vi $(DESTDIR)$(PREFIX)/bin/ex
+	$(CP) $(DESTDIR)$(PREFIX)/bin/vi $(DESTDIR)$(PREFIX)/bin/ex
 
 uninstall :
 	$(RM) $(DESTDIR)$(PREFIX)/bin/ex
