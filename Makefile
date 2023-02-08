@@ -18,11 +18,11 @@ C_OBJS := $(C_SRC:%.c=%.o)
 PREFIX ?= /usr/local
 
 # Commands
-CC := cc
+CC := $(CROSS_COMPILE)cc
 CP := cp -f
 RM := rm -rf
 LN := ln -f
-STRIP := strip
+STRIP := $(CROSS_COMPILE)strip
 
 all: vi ex
 
