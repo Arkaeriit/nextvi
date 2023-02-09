@@ -15,14 +15,27 @@ C_HEAD := $(C_SRC:%.c=%.h) kmap.h helper.h
 C_OBJS := $(C_SRC:%.c=%.o)
 
 # Install targets
-DESTDIR ?= /usr/local/bin
+PREFIX ?= /usr/local
 
 # Commands
-CC := gcc
-CP := cp -f
+HASGCC := $(shell command -v $(CROSS_COMPILE)gcc 2> /dev/null)
+HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
+ifdef HASGCC
+	CC := $(CROSS_COMPILE)gcc
+else
+	ifdef HASCLANG
+		CC := $(CROSS_COMPILE)clang
+	else
+		CC := $(CROSS_COMPILE)cc
+	endif
+endif
 RM := rm -rf
-LN := ln -f
-STRIP := strip
+ifeq $(shell uname -o),Android)
+	CP := cp -f
+else
+	CP := cp -lf
+endif
+STRIP := $(CROSS_COMPILE)strip
 
 all: vi ex
 
@@ -33,17 +46,17 @@ vi: $(C_OBJS)
 	$(CC) $(C_OBJS) $(CFLAGS) -o $@
 
 ex: vi
-	$(LN) vi ex
+	$(CP) vi ex
 
 install : | vi ex
-	mkdir -p $(DESTDIR)
-	$(CP) vi $(DESTDIR)/
-	$(STRIP) $(DESTDIR)/vi
-	$(LN) $(DESTDIR)/vi $(DESTDIR)/ex
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	$(CP) vi $(DESTDIR)$(PREFIX)/bin/
+	$(STRIP) $(DESTDIR)$(PREFIX)/bin/vi
+	$(CP) $(DESTDIR)$(PREFIX)/bin/vi $(DESTDIR)$(PREFIX)/bin/ex
 
 uninstall :
-	$(RM) $(DESTDIR)/ex
-	$(RM) $(DESTDIR)/vi
+	$(RM) $(DESTDIR)$(PREFIX)/bin/ex
+	$(RM) $(DESTDIR)$(PREFIX)/bin/vi
 
 clean : 
 	$(RM) vi
