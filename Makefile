@@ -30,7 +30,7 @@ else
 	endif
 endif
 RM := rm -rf
-ifeq $(shell uname -o),Android)
+ifeq ($(shell uname -o),Android)
 	CP := cp -f
 else
 	CP := cp -lf
