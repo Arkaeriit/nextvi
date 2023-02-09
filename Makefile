@@ -19,10 +19,10 @@ PREFIX ?= /usr/local
 
 # Commands
 HASGCC := $(shell command -v $(CROSS_COMPILE)gcc 2> /dev/null)
-HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
 ifdef HASGCC
 	CC := $(CROSS_COMPILE)gcc
 else
+	HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
 	ifdef HASCLANG
 		CC := $(CROSS_COMPILE)clang
 	else
