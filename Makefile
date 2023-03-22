@@ -3,10 +3,13 @@ CFLAGS += -Wpedantic -Wall -Wextra -Wno-implicit-fallthrough -Wno-missing-field-
 
 OS := $(shell uname -s)
 ifeq ($(OS),Darwin)
-	CFLAGS += -D_DARWIN_C_SOURCE
+CFLAGS += -D_DARWIN_C_SOURCE
 endif
 ifdef MARCHNATIVE
-	CFLAGS += -march=native # Optimize for the current CPU, useful for people who don't share their binaries
+CFLAGS += -march=native
+endif
+ifdef LTO
+CFLAGS += -flto
 endif
 
 # Files lists
@@ -20,26 +23,26 @@ PREFIX ?= /usr/local
 # Commands
 HASGCC := $(shell command -v $(CROSS_COMPILE)gcc 2> /dev/null)
 ifdef HASGCC
-	CC := $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
 else
-	HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
-	ifdef HASCLANG
-		CC := $(CROSS_COMPILE)clang
-	else
-		CC := $(CROSS_COMPILE)cc
-	endif
+HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
+ifdef HASCLANG
+CC := $(CROSS_COMPILE)clang
+else
+CC := $(CROSS_COMPILE)cc
+endif
 endif
 RM := rm -rf
 ifeq ($(shell uname -o),Android)
-	CP := cp -f
+CP := cp -f
 else
-	CP := cp -lf
+CP := cp -lf
 endif
 STRIP := $(CROSS_COMPILE)strip
 
 all: vi ex
 
-%.o : %.c $(C_HEAD)
+%.o: %.c $(C_HEAD)
 	$(CC) -c $< $(CFLAGS) -o $@
 
 vi: $(C_OBJS)
@@ -48,17 +51,17 @@ vi: $(C_OBJS)
 ex: vi
 	$(CP) vi ex
 
-install : | vi ex
+install: vi ex
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	$(CP) vi $(DESTDIR)$(PREFIX)/bin/
+	$(CP) vi $(DESTDIR)$(PREFIX)/bin/vi
 	$(STRIP) $(DESTDIR)$(PREFIX)/bin/vi
 	$(CP) $(DESTDIR)$(PREFIX)/bin/vi $(DESTDIR)$(PREFIX)/bin/ex
 
-uninstall :
+uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/ex
 	$(RM) $(DESTDIR)$(PREFIX)/bin/vi
 
-clean : 
+clean:
 	$(RM) vi
 	$(RM) ex
 	$(RM) *.o
