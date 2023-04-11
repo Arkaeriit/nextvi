@@ -25,11 +25,11 @@ ifdef HASGCC
 	CC := $(CROSS_COMPILE)gcc
 else
 	HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
-ifdef HASCLANG
-	CC := $(CROSS_COMPILE)clang
-else
-	CC := $(CROSS_COMPILE)cc
-endif
+	ifdef HASCLANG
+		CC := $(CROSS_COMPILE)clang
+	else
+		CC := $(CROSS_COMPILE)cc
+	endif
 endif
 RM := rm -rf
 ifeq ($(shell uname -o),Android)
