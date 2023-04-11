@@ -61,6 +61,4 @@ uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/vi
 
 clean:
-	$(RM) vi
-	$(RM) ex
-	$(RM) *.o
+	$(RM) vi ex *.o
