@@ -3,13 +3,13 @@ CFLAGS += -Wpedantic -Wall -Wextra -Wno-implicit-fallthrough -Wno-missing-field-
 
 OS := $(shell uname -s)
 ifeq ($(OS),Darwin)
-CFLAGS += -D_DARWIN_C_SOURCE
+	CFLAGS += -D_DARWIN_C_SOURCE
 endif
 ifdef MARCHNATIVE
-CFLAGS += -march=native
+	CFLAGS += -march=native
 endif
 ifdef LTO
-CFLAGS += -flto
+	CFLAGS += -flto
 endif
 
 # Files lists
@@ -22,20 +22,20 @@ PREFIX ?= /usr/local
 # Commands
 HASGCC := $(shell command -v $(CROSS_COMPILE)gcc 2> /dev/null)
 ifdef HASGCC
-CC := $(CROSS_COMPILE)gcc
+	CC := $(CROSS_COMPILE)gcc
 else
-HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
+	HASCLANG := $(shell command -v $(CROSS_COMPILE)clang 2> /dev/null)
 ifdef HASCLANG
-CC := $(CROSS_COMPILE)clang
+	CC := $(CROSS_COMPILE)clang
 else
-CC := $(CROSS_COMPILE)cc
+	CC := $(CROSS_COMPILE)cc
 endif
 endif
 RM := rm -rf
 ifeq ($(shell uname -o),Android)
-CP := cp -f
+	CP := cp -f
 else
-CP := cp -lf
+	CP := cp -lf
 endif
 STRIP := $(CROSS_COMPILE)strip
 
