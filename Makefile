@@ -57,8 +57,7 @@ install: vi ex
 	$(CP) $(DESTDIR)$(PREFIX)/bin/vi $(DESTDIR)$(PREFIX)/bin/ex
 
 uninstall:
-	$(RM) $(DESTDIR)$(PREFIX)/bin/ex
-	$(RM) $(DESTDIR)$(PREFIX)/bin/vi
+	$(RM) $(DESTDIR)$(PREFIX)/bin/ex $(DESTDIR)$(PREFIX)/bin/vi
 
 clean:
 	$(RM) vi ex *.o
