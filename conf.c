@@ -7,7 +7,7 @@
 /* access mode of new files */
 #define MKFILE_MODE		0600
 
-struct filetype fts[] = {
+const struct filetype fts[] = {
 	{"c", "\\.(c|h|cpp|hpp|cc|cs)$"},		/* C */
 	{"roff", "\\.(ms|tr|roff|tmac|txt|[1-9])$"},	/* troff */
 	{"tex", "\\.tex$"},				/* tex */

@@ -7,7 +7,7 @@ struct filetype {
 	char *ft;		/* file type */
 	char *pat;		/* file name pattern */
 };
-extern struct filetype fts[];
+extern const struct filetype fts[];
 extern int ftslen;
 /* syntax highlighting patterns */
 struct highlight {
