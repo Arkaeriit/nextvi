@@ -38,10 +38,19 @@ void term_done(void)
 	tcsetattr(0, 0, &termios);
 }
 
+/*
+ * Write some chars to the terminal and ignore any error.
+ */
+static void term_write(const char* data, size_t size)
+{
+    ssize_t _ = write(1, data, size);
+    _++;
+}
+
 void term_clean(void)
 {
-	write(1, "\x1b[2J", 4);	/* clear screen */
-	write(1, "\x1b[H", 3);	/* cursor topleft */
+	term_write("\x1b[2J", 4);	/* clear screen */
+	term_write("\x1b[H", 3);	/* cursor topleft */
 }
 
 void term_suspend(void)
@@ -53,7 +62,7 @@ void term_suspend(void)
 
 void term_commit(void)
 {
-	write(1, term_sbuf->s, term_sbuf->s_n);
+	term_write(term_sbuf->s, term_sbuf->s_n);
 	sbuf_cut(term_sbuf, 0)
 	term_record = 0;
 }
@@ -63,7 +72,7 @@ void term_out(char *s)
 	if (term_record)
 		sbufn_str(term_sbuf, s)
 	else
-		write(1, s, strlen(s));
+		term_write(s, strlen(s));
 }
 
 void term_chr(int ch)
@@ -190,26 +199,32 @@ char *term_att(int att)
 static int cmd_make(char **argv, int *ifd, int *ofd)
 {
 	int pid;
+    int rc = 0;
 	int pipefds0[2];
 	int pipefds1[2];
 	if (ifd)
-		pipe(pipefds0);
+		rc |= pipe(pipefds0);
 	if (ofd)
-		pipe(pipefds1);
+		rc |= pipe(pipefds1);
+    if (rc) {
+        return 0; // If rc failed, we return 0 as PID so signify an error.
+    }
 	if (!(pid = fork())) {
 		if (ifd) {		/* setting up stdin */
 			close(0);
-			dup(pipefds0[0]);
+			rc |= dup(pipefds0[0]);
 			close(pipefds0[1]);
 			close(pipefds0[0]);
 		}
 		if (ofd) {		/* setting up stdout */
 			close(1);
-			dup(pipefds1[1]);
+			rc |= dup(pipefds1[1]);
 			close(pipefds1[0]);
 			close(pipefds1[1]);
 		}
-		execvp(argv[0], argv);
+        if (!rc) {
+            execvp(argv[0], argv);
+        }
 		exit(1);
 	}
 	if (ifd)
