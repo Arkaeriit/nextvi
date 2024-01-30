@@ -569,7 +569,7 @@ static char *led_line(const char *pref, char *post, char *ai,
 		case TK_CTL('z'):;
 			char buf[100];
 			sug_pt = sug_pt == len ? -1 : len;
-			itoa(sug_pt, buf);
+			nextvi_itoa(sug_pt, buf);
 			rstate->ren_laststr = NULL;
 			led_render(buf, xtop+xrows, 0, xcols);
 			if (ai_max)

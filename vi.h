@@ -19,7 +19,7 @@ void vi(int init);
 
 char *vi_regget(int c, int *lnmode);
 void vi_regput(int c, const char *s, int lnmode);
-char *itoa(int n, char s[]);
+char *nextvi_itoa(int n, char s[]);
 /* file system */
 void dir_calc(char *cur_dir);
 #define mdir_calc(path) { char buf[4096]; strcpy(buf, path); dir_calc(buf); }

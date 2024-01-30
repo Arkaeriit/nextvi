@@ -37,7 +37,7 @@ static void reverse_in_place(char *str, int len)
 	}
 }
 
-char *itoa(int n, char s[])
+char *nextvi_itoa(int n, char s[])
 {
 	int i = 0, sign;
 	if ((sign = n) < 0)		/* record sign */
@@ -76,7 +76,7 @@ int l2 = ren_off(tmp, xleft+xcols); \
 for (int k = _nrow; k == _nrow && _noff >= l1 && _noff <= l2; i++) \
 { \
 	if (tmp[_noff] == ' ') { \
-		c = itoa(i%10 ? i%10 : i, snum); \
+		c = nextvi_itoa(i%10 ? i%10 : i, snum); \
 		tmp[_noff] = *snum; \
 	} \
 	if (lbuf_word(xb, skip, dir, &_nrow, &_noff)) \
@@ -103,7 +103,7 @@ static void vi_drawrow(int row)
 		lnnum = 1;
 		l1 = strlen(s)+1;
 		char tmp[l1+100];
-		c = itoa(row+1-movedown, tmp);
+		c = nextvi_itoa(row+1-movedown, tmp);
 		l2 = strlen(tmp)+1;
 		*c++ = ' ';
 		for (i = 0; i < l1; i++)
@@ -112,7 +112,7 @@ static void vi_drawrow(int row)
 		if (!s[i])
 			i = 0;
 		memcpy(c, s, i);
-		c = itoa(abs(xrow-row+movedown), tmp+l2+i);
+		c = nextvi_itoa(abs(xrow-row+movedown), tmp+l2+i);
 		*c++ = ' ';
 		memcpy(c, s+i, l1-i);
 		led_reprint(tmp, row - xtop);
@@ -1444,7 +1444,7 @@ static void vc_execute(void)
 static void vi_argcmd(int arg, char cmd)
 {
 	char str[100];
-	char *cs = itoa(arg, str);
+	char *cs = nextvi_itoa(arg, str);
 	*cs = cmd;
 	term_push(str, cs - str + 1);
 }
@@ -1725,7 +1725,7 @@ void vi(int init)
 					cs = vi_curword(xb, xrow, xoff, vi_prefix());
 					char buf[cs ? strlen(cs)+30 : 30];
 					strcpy(buf, ".,.+");
-					char *buf1 = itoa(vi_arg1, buf+4);
+					char *buf1 = nextvi_itoa(vi_arg1, buf+4);
 					strcat(buf1, "s/");
 					if (cs) {
 						strcat(buf1, cs);
@@ -2027,7 +2027,7 @@ void vi(int init)
 					}
 					if (start) {
 						sbuf_str(sb, "^.{")
-						itoa(start, buf);
+						nextvi_itoa(start, buf);
 						sbuf_str(sb, buf)
 						sbuf_str(sb, "}(\\{)")
 					} else
@@ -2035,12 +2035,12 @@ void vi(int init)
 					sb->s[sb->s_n-2] = pairs[ch];
 					if (off && row == xrow) {
 						sbuf_str(sb, ".{")
-						itoa(abs(off - start - 1), buf);
+						nextvi_itoa(abs(off - start - 1), buf);
 						sbuf_str(sb, buf)
 						sbuf_str(sb, "}(\\})")
 					} else if (off) {
 						sbuf_str(sb, "|^.{")
-						itoa(off, buf);
+						nextvi_itoa(off, buf);
 						sbuf_str(sb, buf)
 						sbuf_str(sb, "}(\\})")
 					} else
