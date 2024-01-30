@@ -2,5 +2,7 @@ cscope.out
 *.o
 tags
 vi
+vi.com*
 ex
 file
+cosmopolitan

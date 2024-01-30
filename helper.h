@@ -2,6 +2,9 @@
 #define HELPER_H
 
 /* System headers */
+#if NEXTVI_WITH_COSMO
+#include "cosmopolitan.h"
+#else
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -17,6 +20,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
+#endif
 
 /* helper macros */
 #define LEN(a)		(int)(sizeof(a) / sizeof((a)[0]))
