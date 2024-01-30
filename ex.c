@@ -214,7 +214,7 @@ void ex_krsset(char *kwd, int dir)
 {
 	if (kwd) {
 		rset_free(xkwdrs);
-		xkwdrs = rset_make(1, (char*[]){kwd}, xic ? REG_ICASE : 0);
+		xkwdrs = rset_make(1, (char*[]){kwd}, xic ? NEXTVI_REG_ICASE : 0);
 		vi_regput('/', kwd, 0);
 	}
 	xkwddir = dir;
@@ -243,7 +243,7 @@ static int ex_search(const char **pat)
 		return -1;
 	row = xrow + dir;
 	while (row >= 0 && row < lbuf_len(xb)) {
-		if (rset_find(re, lbuf_get(xb, row), 0, NULL, REG_NEWLINE) >= 0)
+		if (rset_find(re, lbuf_get(xb, row), 0, NULL, NEXTVI_REG_NEWLINE) >= 0)
 			break;
 		row += dir;
 	}
@@ -734,7 +734,7 @@ static int ec_substitute(const char *loc, char *cmd, char *arg)
 	for (i = beg; i < end; i++) {
 		char *ln = lbuf_get(xb, i);
 		sbuf *r = NULL;
-		while (rset_find(re, ln, grp / 2, offs, REG_NEWLINE) >= 0) {
+		while (rset_find(re, ln, grp / 2, offs, NEXTVI_REG_NEWLINE) >= 0) {
 			if (offs[xgrp - 2] < 0) {
 				ln += offs[1] > 0 ? offs[1] : 1;
 				continue;
@@ -834,7 +834,7 @@ static int ec_glob(const char *loc, char *cmd, char *arg)
 	i = beg;
 	while (i < lbuf_len(xb)) {
 		char *ln = lbuf_get(xb, i);
-		if ((rset_find(re, ln, 0, NULL, REG_NEWLINE) < 0) == not) {
+		if ((rset_find(re, ln, 0, NULL, NEXTVI_REG_NEWLINE) < 0) == not) {
 			xrow = i;
 			if (ex_exec(s))
 				break;
@@ -951,7 +951,7 @@ static int ec_setincl(const char *loc, char *cmd, char *arg)
 	ec_setdir(NULL, NULL, NULL);
 	rset_free(fsincl);
 	if (*arg)
-		fsincl = rset_make(1, (char*[]){arg}, xic ? REG_ICASE : 0);
+		fsincl = rset_make(1, (char*[]){arg}, xic ? NEXTVI_REG_ICASE : 0);
 	else
 		fsincl = NULL;
 	return 0;

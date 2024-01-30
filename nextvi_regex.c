@@ -82,7 +82,7 @@ static int _compilecode(const char **re_loc, rcode *prog, int sizecode, int flag
 			term = PC;
 			EMIT(PC++, CHAR);
 			uc_code(c, re)
-			if (flags & REG_ICASE)
+			if (flags & NEXTVI_REG_ICASE)
 				c = tolower(c);
 			EMIT(PC++, c);
 			break;
@@ -108,13 +108,13 @@ static int _compilecode(const char **re_loc, rcode *prog, int sizecode, int flag
 					not = -(cnt+2); re += 2;
 				}
 				uc_code(c, re)
-				if (flags & REG_ICASE)
+				if (flags & NEXTVI_REG_ICASE)
 					c = tolower(c);
 				EMIT(PC++, c);
 				if (re[l] == '-' && re[l+1] != ']')
 					re += l+1;
 				uc_code(c, re)
-				if (flags & REG_ICASE)
+				if (flags & NEXTVI_REG_ICASE)
 					c = tolower(c);
 				EMIT(PC++, c);
 				uc_len(c, re) re += c;
@@ -362,7 +362,7 @@ memcpy(s1->sub, nsub->sub, osubp); \
 
 #define instclist(nn) \
 else if (spc == BOL) { \
-	if (flg & REG_NOTBOL || _sp != s) { \
+	if (flg & NEXTVI_REG_NOTBOL || _sp != s) { \
 		if (!si && !clistidx) \
 			_return(0) \
 		deccheck(nn) \
@@ -430,7 +430,7 @@ if (spc > JMP) { \
 		deccheck(nn) \
 	npc++; goto rec##nn; \
 } else if (spc == EOL) { \
-	if (flg & REG_NOTEOL || *_sp != eol_ch) \
+	if (flg & NEXTVI_REG_NOTEOL || *_sp != eol_ch) \
 		deccheck(nn) \
 	npc++; goto rec##nn; \
 } inst##list(nn) \
@@ -525,7 +525,7 @@ int re_pikevm(rcode *prog, const char *s, const char **subp, int nsubp, int flg)
 	int rsubsize = sizeof(rsub)+(sizeof(char*)*nsubp);
 	int i, j, c, suboff = rsubsize, *npc, osubp = nsubp * sizeof(char*);
 	int si = 0, clistidx = 0, nlistidx, spc, mcont = MATCH;
-	int *insts = prog->insts, eol_ch = flg & REG_NEWLINE ? '\n' : 0;
+	int *insts = prog->insts, eol_ch = flg & NEXTVI_REG_NEWLINE ? '\n' : 0;
 	int *pcs[prog->splits];
 	unsigned int sdense[prog->splits * 2], sparsesz;
 	rsub *subs[prog->splits];
@@ -536,7 +536,7 @@ int re_pikevm(rcode *prog, const char *s, const char **subp, int nsubp, int flg)
 	flg = prog->flg | flg;
 	if (eol_ch)
 		utf8_length[eol_ch] = 0;
-	if (flg & REG_ICASE)
+	if (flg & NEXTVI_REG_ICASE)
 		goto jmp_start1;
 	goto jmp_start2;
 	match(1, c = tolower(c);)
@@ -601,8 +601,8 @@ rset *rset_make(int n, char **re, int flg)
 /* return the index of the matching regular expression or -1 if none matches */
 int rset_find(rset *rs, char *s, int n, int *grps, int flg)
 {
-	regmatch_t subs[rs->grpcnt+1];
-	regmatch_t *sub = subs+1;
+	nextvi_regmatch_t subs[rs->grpcnt+1];
+	nextvi_regmatch_t *sub = subs+1;
 	if (re_pikevm(rs->regex, s, (const char**)sub, rs->grpcnt * 2, flg))
 	{
 		subs[0].rm_eo = NULL; /* make sure sub[-1] never matches */

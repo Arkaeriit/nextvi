@@ -34,7 +34,7 @@ static int dir_reorder(char **chrs, int *ord, int end)
 	while (beg < end) {
 		char *s = chrs[beg];
 		found = rset_find(rs, s, 16, subs,
-				*chrs[end-1] == '\n' ? REG_NEWLINE : 0);
+				*chrs[end-1] == '\n' ? NEXTVI_REG_NEWLINE : 0);
 		if (found >= 0) {
 			for (int i = 0; i < end1; i++)
 				ord[i] = i;
@@ -354,7 +354,7 @@ void syn_highlight(int *att, char *s, int n)
 		}
 		sidx += cend;
 		cend = 1;
-		flg = REG_NOTBOL;
+		flg = NEXTVI_REG_NOTBOL;
 	}
 	if (syn_blockhl && !blk)
 		for (j = 0; j < n; j++)
