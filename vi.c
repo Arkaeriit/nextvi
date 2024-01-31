@@ -2129,7 +2129,7 @@ int main(int argc, char *argv[])
 	/* Normal operation */
 	int i;
 	char *prog = strchr(argv[0], '/') ? strrchr(argv[0], '/') + 1 : argv[0];
-	xvis = strcmp("ex", prog) && strcmp("neatex", prog);
+	xvis = strcmp("ex", prog) && strcmp("neatex", prog) && strcmp("ex.com", prog);
 	if (!setup_signals())
 		return 1;
 	dir_init();

@@ -1,22 +1,18 @@
 # Flags
-CFLAGS += -Wall #-Wextra -Wno-implicit-fallthrough -Wno-missing-field-initializers -Wno-unused-parameter -Wfatal-errors -Wno-strict-prototypes -std=c99 -D_POSIX_C_SOURCE=200809L -O2
+CFLAGS += -Wall -Wextra -Wno-implicit-fallthrough -Wno-missing-field-initializers -Wno-unused-parameter -Wfatal-errors -Wno-strict-prototypes -std=c99 -D_POSIX_C_SOURCE=200809L -O2
 
 # Files lists
 C_SRC := conf.c ex.c lbuf.c led.c nextvi_regex.c ren.c term.c uc.c vi.c
 C_HEAD := $(C_SRC:%.c=%.h) kmap.h helper.h
 C_OBJS := $(C_SRC:%.c=%.o)
+COSMO_OBJS := $(C_SRC:%.c=%.cosmo.o)
 
-ifdef COSMOPOLITAN
-	CFLAGS += -g -Os -static -fno-pie -no-pie -nostdlib -nostdinc -gdwarf-4  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -Wl,--gc-sections -fuse-ld=bfd -Wl,--gc-sections -I./cosmopolitan  -Wl,-T,cosmopolitan/ape.lds -DNEXTVI_WITH_COSMO
-	LDFLAGS += cosmopolitan/cosmopolitan.a cosmopolitan/ape-no-modify-self.o cosmopolitan/crt.o
-	TARGET := vi.com
-	C_HEAD += cosmopolitan/cosmopolitan.h
-else
-	TARGET := vi ex
-	CFLAGS += -Wpedantic
-endif
+COSMO_CFLAGS := -g -Os -static -fno-pie -no-pie -nostdlib -nostdinc -gdwarf-4  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -Wl,--gc-sections -fuse-ld=bfd -Wl,--gc-sections -I./cosmopolitan  -Wl,-T,cosmopolitan/ape.lds -DNEXTVI_WITH_COSMO
+COSMO_LDFLAGS := cosmopolitan/cosmopolitan.a cosmopolitan/ape-no-modify-self.o cosmopolitan/crt.o
 
-all : $(TARGET)
+NOCOSMO_CFLAGS := -Wpedantic
+
+all : vi ex
 
 OS := $(shell uname -s)
 ifeq ($(OS),Darwin)
@@ -51,21 +47,25 @@ endif
 STRIP := $(CROSS_COMPILE)strip
 
 %.o : %.c $(C_HEAD)
-	$(CC) -c $< $(CFLAGS) -o $@
+	$(CC) -c $< $(CFLAGS) $(NOCOSMO_CFLAGS) -o $@
+
+%.cosmo.o : %.c $(C_HEAD) cosmopolitan/cosmopolitan.h
+	$(CC) -c $< $(CFLAGS) $(COSMO_CFLAGS) -o $@
 
 vi: $(C_OBJS)
-	$(CC) $(C_OBJS) $(LDFLAGS) $(CFLAGS) -o $@
+	$(CC) $(C_OBJS) $(LDFLAGS) $(NOCOSMO_CFLAGS) $(CFLAGS) -o $@
 
-ex: vi
-	$(CP) vi ex
+ex : vi
+	$(CP) $< $@
 
-vi.com.dbg: $(C_OBJS)
-	$(CC) $(C_OBJS) $(CFLAGS) $(LDFLAGS) -o $@
+ex.com : vi.com
+	$(CP) $< $@
+
+vi.com.dbg: $(COSMO_OBJS)
+	$(CC) $(COSMO_OBJS) $(CFLAGS) $(COSMO_CFLAGS) $(LDFLAGS) $(COSMO_LDFLAGS) -o $@
 
 vi.com: vi.com.dbg
 	$(OBJCOPY) -S -O binary $< $@ 
-
-
 
 cosmopolitan/cosmopolitan.h:
 	mkdir -p cosmopolitan
@@ -106,8 +106,8 @@ uninstall :
 
 clean : 
 	$(RM) vi
-	$(RM) vi.com
-	$(RM) vi.com.dbg
+	$(RM) *.com
+	$(RM) *.com.dbg
 	$(RM) ex
 	$(RM) *.o
 	$(RM) cosmopolitan
