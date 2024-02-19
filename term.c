@@ -159,7 +159,8 @@ int term_read(void)
 	}
 	if (icmd_pos < sizeof(icmd))
 		icmd[icmd_pos++] = (unsigned char)ibuf[ibuf_pos];
-	return (unsigned char)ibuf[ibuf_pos++];
+    int ret = (unsigned char) ibuf[ibuf_pos++];
+    return ret == '\r' ? '\n' : ret;
 }
 
 /* return a static string that changes text attributes to att */
