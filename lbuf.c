@@ -9,29 +9,36 @@
 
 /* line operations */
 struct lopt {
-	char *ins;		/* inserted text */
-	char *del;		/* deleted text */
-	int pos, n_ins, n_del;	/* modification location */
-	int pos_off;		/* cursor line offset */
-	int seq;		/* operation number */
-	int *mark, *mark_off;	/* saved marks */
+	char *ins;             /* inserted text */
+	char *del;             /* deleted text */
+	int pos, n_ins, n_del; /* modification location */
+	int pos_off;           /* cursor line offset */
+	int seq;               /* operation number */
+	int *mark, *mark_off;  /* saved marks */
+};
+
+enum line_kind {
+	LK_UNKNOWN,
+	LK_UNIX,
+	LK_WINDOWS
 };
 
 /* line buffers */
 struct lbuf {
-	char **ln;		/* buffer lines */
-	char *ln_glob;		/* line global mark */
-	struct lopt *hist;	/* buffer history */
-	int mark[NMARKS];	/* mark lines */
-	int mark_off[NMARKS];	/* mark line offsets */
-	int ln_n;		/* number of lines in ln[] */
-	int ln_sz;		/* size of ln[] */
-	int useq;		/* current operation sequence */
-	int hist_sz;		/* size of hist[] */
-	int hist_n;		/* current history head in hist[] */
-	int hist_u;		/* current undo head in hist[] */
-	int useq_zero;		/* useq for lbuf_saved() */
-	int useq_last;		/* useq before hist[] */
+	char **ln;                /* buffer lines */
+	char *ln_glob;            /* line global mark */
+	struct lopt *hist;        /* buffer history */
+	int mark[NMARKS];         /* mark lines */
+	int mark_off[NMARKS];     /* mark line offsets */
+	int ln_n;                 /* number of lines in ln[] */
+	int ln_sz;                /* size of ln[] */
+	int useq;                 /* current operation sequence */
+	int hist_sz;              /* size of hist[] */
+	int hist_n;               /* current history head in hist[] */
+	int hist_u;               /* current undo head in hist[] */
+	int useq_zero;            /* useq for lbuf_saved() */
+	int useq_last;            /* useq before hist[] */
+	enum line_kind line_kind; /* End of line symbol */
 };
 
 struct lbuf *lbuf_make(void)
@@ -233,14 +240,25 @@ int lbuf_rd(struct lbuf *lbuf, int fd, int beg, int end)
 	return nr != 0;
 }
 
+
 int lbuf_wr(struct lbuf *lbuf, int fd, int beg, int end)
 {
 	for (int i = beg; i < end; i++) {
 		char *ln = lbuf->ln[i];
-		long nw = 0;
 		long nl = strlen(ln);
+		// Make windows line end when needed.
+		char line_to_write[nl+2];
+		strcpy(line_to_write, ln);
+		if (lbuf->line_kind == LK_WINDOWS && ln[nl-1] == '\n') {
+			line_to_write[nl-1] = '\r';
+			line_to_write[nl] = '\n';
+			line_to_write[nl+1] = 0;
+			nl++;
+		}
+
+		long nw = 0;
 		while (nw < nl) {
-			long nc = write(fd, ln + nw, nl - nw);
+			long nc = write(fd, line_to_write + nw, nl - nw);
 			if (nc < 0)
 				return 1;
 			nw += nc;
@@ -260,6 +278,25 @@ void lbuf_edit(struct lbuf *lb, char *buf, int beg, int end)
 		return;
 	int lc = lbuf_opt(lb, buf, beg, end - beg);
 	lbuf_replace(lb, buf, beg, end - beg, lc);
+
+	// Check if the line are Windows or Unix type
+	for (int i=0; i<lb->ln_n; i++) {
+		char* line = lb->ln[i];
+		size_t line_size = strlen(line);
+		if (lb->line_kind == LK_UNIX) {
+			break;
+		}
+		if (line_size <= 1) {
+			continue;
+		}
+		if (line[line_size-2] == '\r' && line[line_size-1] == '\n') {
+			lb->line_kind = LK_WINDOWS;
+			line[line_size-2] = '\n';
+			line[line_size-1] = 0;
+		} else if (line[line_size-1] == '\n' && lb->line_kind == LK_UNKNOWN) {
+			lb->line_kind = LK_UNIX;
+		}
+	}
 }
 
 char *lbuf_cp(struct lbuf *lb, int beg, int end)
