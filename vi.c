@@ -1010,10 +1010,13 @@ static int charcount(char *text, int tlen, char *post)
 	return uc_slen(nl) - uc_slen(post);
 }
 
+static int lmodified;
+
 static char *vi_input(char *pref, char *post, int row)
 {
 	sbuf *rep = led_input(pref, post, &xkmap, row);
 	xoff = *rep->s ? charcount(rep->s, rep->s_n, post) : xoff;
+	lmodified = *rep->s;
 	sbufn_done(rep)
 }
 
@@ -1738,6 +1741,37 @@ void vi(int init)
 				vc_insert(c);
 				vi_mod = !xpac && xrow == orow ? 3 : 1;
 				ins:
+				switch (vi_insmov) {
+				case 'A':	/* ↑ */
+					vi_back(!lmodified ? c : 'i');
+					if (lmodified)
+						vi_col = vi_off2col(xb, xrow, xoff);
+					xrow--;
+					xrow = xrow < 0 ? 0 : xrow;
+					xoff = vi_col2off(xb, xrow, vi_col);
+					lmodified = 0;
+					goto _break;
+				case 'B':	/* ↓ */
+					vi_back(!lmodified ? c : 'i');
+					if (lmodified)
+						vi_col = vi_off2col(xb, xrow, xoff);
+					xrow++;
+					xoff = vi_col2off(xb, xrow, vi_col);
+					lmodified = 0;
+					goto _break;
+				case 'D':	/* ← */
+					vi_back('i');
+					xoff--;
+					xoff = xoff < 0 ? 0 : xoff;
+					vi_col = vi_off2col(xb, xrow, xoff);
+					goto _break;
+				case 'C':	/* → */
+					vi_back(*uc_chr(lbuf_get(xb, xrow), xoff+2) ? 'i' : 'A');
+					xoff++;
+					if (*uc_chr(lbuf_get(xb, xrow), xoff))
+						vi_col = vi_off2col(xb, xrow, xoff);
+					goto _break;
+				}
 				if (vi_insmov == 127) {
 					vi_mod = vi_mod == 3 ? 2 : 1;
 					if (xrow && !(xoff > 0 && lbuf_eol(xb, xrow))) {
@@ -1751,6 +1785,9 @@ void vi(int init)
 				if (c != 'A' && c != 'C')
 					xoff--;
 				xoff = xoff < 0 ? 0 : xoff;
+				break;
+				_break:
+				vi_mod = 0;
 				break;
 			case 'J':
 				vc_join(vi_joinmode, vi_arg1 <= 1 ? 2 : vi_arg1);
