@@ -2091,7 +2091,7 @@ int main(int argc, char *argv[])
 	/* Normal operation */
 	int i, j;
 	char *prog = strchr(argv[0], '/') ? strrchr(argv[0], '/') + 1 : argv[0];
-	xvis = strcmp("ex", prog) && strcmp("neatex", prog) && strcmp("ex.com", prog);
+	xvis = strcmp("ex", prog) && strcmp("ex.com", prog) ? 0 : 4;
 	if (!setup_signals())
 		return EXIT_FAILURE;
 	dir_init();
@@ -2123,7 +2123,7 @@ int main(int argc, char *argv[])
 		ex();
 	else
 		vi(1);
-	if (xvis) {
+	if (!(xvis & (2|4))) {
 		term_done();
 		term_clean();
 	}
