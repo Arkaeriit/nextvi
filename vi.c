@@ -2056,7 +2056,7 @@ static void version(void) {
 }
 
 static void help(void) {
-	printf("Nextvi. A vi/ text editor.\n"
+	printf("Nextvi. A vi text editor.\n"
 	       "\n"
 	       "Usage:\n"
 	       "    nextvi <options>        : open a new file.\n"
@@ -2065,7 +2065,7 @@ static void help(void) {
 	       "    nextvi --version        : print the version.\n"
 	       "\n"
 	       "Available options:\n"
-	       "    -s : ???\n"
+	       "    -s : When running ex, run it in script mode.\n"
 	       "    -e : Run in ex mode.\n"
 	       "    -v : Run in vi mode. This overrides `-e`.\n"
 	       "\n"
