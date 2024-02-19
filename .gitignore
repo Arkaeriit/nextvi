@@ -1,6 +1,7 @@
 cscope.out
 ex.com
 *.o
+*.exe
 tags
 vi
 vi.com*

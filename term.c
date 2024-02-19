@@ -5,34 +5,37 @@
 
 sbuf *term_sbuf;
 int term_record;
-static int rows, cols;
+int xrows, xcols;
 static struct termios termios;
 
 void term_init(void)
 {
+	if (xvis & 2 && xvis & 4)
+		return;
 	struct winsize win;
 	struct termios newtermios;
 	sbufn_make(term_sbuf, 2048)
 	tcgetattr(0, &termios);
 	newtermios = termios;
-	newtermios.c_lflag &= ~(ICANON | ISIG);
-	newtermios.c_lflag &= ~ECHO;
+	newtermios.c_lflag &= ~(ICANON | ISIG | ECHO);
 	tcsetattr(0, TCSAFLUSH, &newtermios);
 	if (getenv("LINES"))
-		rows = atoi(getenv("LINES"));
+		xrows = atoi(getenv("LINES"));
 	if (getenv("COLUMNS"))
-		cols = atoi(getenv("COLUMNS"));
+		xcols = atoi(getenv("COLUMNS"));
 	if (!ioctl(0, TIOCGWINSZ, &win)) {
-		cols = win.ws_col;
-		rows = win.ws_row;
+		xcols = win.ws_col;
+		xrows = win.ws_row;
 	}
-	cols = cols ? cols : 80;
-	rows = rows ? rows : 25;
+	xcols = xcols ? xcols : 80;
+	xrows = xrows ? xrows : 25;
 	term_out("\33[m");
 }
 
 void term_done(void)
 {
+	if (!term_sbuf)
+		return;
 	term_commit();
 	sbuf_free(term_sbuf)
 	tcsetattr(0, 0, &termios);
@@ -41,7 +44,7 @@ void term_done(void)
 /*
  * Write some chars to the terminal and ignore any error.
  */
-static void term_write(const char* data, size_t size)
+void term_write(const char* data, size_t size)
 {
     ssize_t _ = write(1, data, size);
     _++;
@@ -56,7 +59,7 @@ void term_clean(void)
 void term_suspend(void)
 {
 	term_done();
-	kill(getpid(), SIGSTOP);
+	kill(0, SIGSTOP);
 	term_init();
 }
 
@@ -91,7 +94,7 @@ void term_room(int n)
 	char cmd[16];
 	if (n < 0)
 		sprintf(cmd, "\33[%dM", -n);
-	if (n > 0)
+	else if (n > 0)
 		sprintf(cmd, "\33[%dL", n);
 	if (n)
 		term_out(cmd);
@@ -99,26 +102,16 @@ void term_room(int n)
 
 void term_pos(int r, int c)
 {
-	char buf[32] = "\r";
+	char buf[32];
 	if (c < 0)
 		c = 0;
-	if (c >= xcols)
-		c = cols - 1;
+	else if (c >= xcols)
+		c = xcols - 1;
 	if (r < 0)
 		sprintf(buf, "\r\33[%d%c", abs(c), c > 0 ? 'C' : 'D');
 	else
 		sprintf(buf, "\33[%d;%dH", r + 1, c + 1);
 	term_out(buf);
-}
-
-int term_rows(void)
-{
-	return rows;
-}
-
-int term_cols(void)
-{
-	return cols;
 }
 
 static char ibuf[4096];			/* input character buffer */
@@ -217,8 +210,10 @@ static int cmd_make(char **argv, int *ifd, int *ofd)
 			close(pipefds0[1]);
 			close(pipefds0[0]);
 		}
-		if (ofd) {		/* setting up stdout */
+		if (ofd) {		/* setting up stdout and stderr */
 			close(1);
+			rc |= dup(pipefds1[1]);
+			close(2);
 			rc |= dup(pipefds1[1]);
 			close(pipefds1[0]);
 			close(pipefds1[1]);
@@ -259,29 +254,28 @@ char *xgetenv(char **q)
 	return r;
 }
 
-/* execute a command; process input if iproc and process output if oproc */
-char *cmd_pipe(char *cmd, char *ibuf, int iproc, int oproc)
+/* execute a command; pass in input if ibuf and process output if oproc */
+char *cmd_pipe(char *cmd, char *ibuf, int oproc)
 {
 	static char *sh[] = {"$SHELL", "sh", NULL};
 	struct pollfd fds[3];
-	sbuf *sb;
+	sbuf *sb = NULL; /* initialize, bogus gcc12 warn */
 	char buf[512];
 	int ifd = -1, ofd = -1;
-	int slen = iproc ? strlen(ibuf) : 0;
+	int slen = ibuf ? strlen(ibuf) : 0;
 	int nw = 0;
-	char *argv[4+xish];
+	char *argv[5];
 	argv[0] = xgetenv(sh);
-	if (xish)
-		argv[xish] = "-i";
-	argv[1+xish] = "-c";
-	argv[2+xish] = cmd;
-	argv[3+xish] = NULL;
-	int pid = cmd_make(argv, iproc ? &ifd : NULL, oproc ? &ofd : NULL);
+	argv[1] = xish ? "-i" : argv[0];
+	argv[2] = "-c";
+	argv[3] = cmd;
+	argv[4] = NULL;
+	int pid = cmd_make(argv+!xish, ibuf ? &ifd : NULL, oproc ? &ofd : NULL);
 	if (pid <= 0)
 		return NULL;
 	if (oproc)
 		sbuf_make(sb, 64)
-	if (!iproc) {
+	if (!ibuf) {
 		signal(SIGINT, SIG_IGN);
 		term_done();
 	}
@@ -290,18 +284,22 @@ char *cmd_pipe(char *cmd, char *ibuf, int iproc, int oproc)
 	fds[0].events = POLLIN;
 	fds[1].fd = ifd;
 	fds[1].events = POLLOUT;
-	fds[2].fd = iproc ? 0 : -1;
+	fds[2].fd = ibuf ? 0 : -1;
 	fds[2].events = POLLIN;
 	while ((fds[0].fd >= 0 || fds[1].fd >= 0) && poll(fds, 3, 200) >= 0) {
 		if (fds[0].revents & POLLIN) {
 			int ret = read(fds[0].fd, buf, sizeof(buf));
-			if (ret > 0 && oproc)
+			if (ret > 0 && oproc == 2)
+				term_write(buf, ret);
+			if (ret > 0)
 				sbuf_mem(sb, buf, ret)
-			if (ret <= 0) {
+			else {
 				close(fds[0].fd);
 				fds[0].fd = -1;
 			}
-			continue;
+		} else if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+			close(fds[0].fd);
+			fds[0].fd = -1;
 		}
 		if (fds[1].revents & POLLOUT) {
 			int ret = write(fds[1].fd, ibuf + nw, slen - nw);
@@ -311,33 +309,27 @@ char *cmd_pipe(char *cmd, char *ibuf, int iproc, int oproc)
 				close(fds[1].fd);
 				fds[1].fd = -1;
 			}
-			continue;
-		}
-		if (fds[2].revents & POLLIN) {
-			int ret = read(fds[2].fd, buf, sizeof(buf));
-			int i;
-			for (i = 0; i < ret; i++)
-				if ((unsigned char) buf[i] == TK_CTL('c'))
-					kill(pid, SIGINT);
-		}
-		if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-			close(fds[0].fd);
-			fds[0].fd = -1;
-		}
-		if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+		} else if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL)) {
 			close(fds[1].fd);
 			fds[1].fd = -1;
 		}
-		if (fds[2].revents & (POLLERR | POLLHUP | POLLNVAL))
+		if (fds[2].revents & POLLIN) {
+			int ret = read(fds[2].fd, buf, sizeof(buf));
+			for (int i = 0; i < ret; i++)
+				if ((unsigned char) buf[i] == TK_CTL('c'))
+					kill(pid, SIGINT);
+		} else if (fds[2].revents & (POLLERR | POLLHUP | POLLNVAL))
 			fds[2].fd = -1;
 	}
-	close(fds[0].fd);
-	close(fds[1].fd);
+	if (fds[0].fd >= 0)
+		close(ofd);
+	if (fds[1].fd >= 0)
+		close(ifd);
 	waitpid(pid, NULL, 0);
 	signal(SIGTTOU, SIG_IGN);
-	tcsetpgrp(STDIN_FILENO, getpid());
+	tcsetpgrp(STDIN_FILENO, getpgrp());
 	signal(SIGTTOU, SIG_DFL);
-	if (!iproc) {
+	if (!ibuf) {
 		term_init();
 		signal(SIGINT, SIG_DFL);
 	}
@@ -348,6 +340,6 @@ char *cmd_pipe(char *cmd, char *ibuf, int iproc, int oproc)
 
 int cmd_exec(char *cmd)
 {
-	cmd_pipe(cmd, NULL, 0, 0);
+	cmd_pipe(cmd, NULL, 0);
 	return 0;
 }

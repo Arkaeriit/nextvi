@@ -87,5 +87,16 @@ sb->s_n += len; \
 #define sbufn_cut(sb, len) { sbuf_cut(sb, len) sbuf_null(sb) }
 #define sbufn_chr(sb, c) { sbuf_chr(sb, c) sbuf_null(sb) }
 
+#define istempbuf(buf) (buf - bufs < 0 || buf - bufs >= xbufcur)
+
+/* ease up ridiculous global stuffing */
+#define preserve(type, name, value) \
+type tmp##name = name; \
+name = value; \
+
+#define restore(name) \
+name = tmp##name; \
+
+
 #endif
 

@@ -27,8 +27,6 @@ static int dir_reorder(char **chrs, int *ord, int end)
 {
 	int dir = dir_context(chrs[0]);
 	rset *rs = dir < 0 ? dir_rsrl : dir_rslr;
-	if (!rs)
-		return 0;
 	int beg = 0, end1 = end, r_beg, r_end, c_beg, c_end;
 	int subs[32], grp, found;
 	while (beg < end) {
@@ -86,26 +84,13 @@ void dir_init(void)
 	dir_rsctx = rset_make(i, ctx, 0);
 }
 
-void dir_done(void)
-{
-	rset_free(dir_rslr);
-	rset_free(dir_rsrl);
-	rset_free(dir_rsctx);
-}
-
-static ren_state rstates[2];
+static ren_state rstates[1];
 ren_state *rstate = &rstates[0];
 
 void ren_done(void)
 {
 	free(rstate->ren_lastpos);
 	free(rstate->ren_lastchrs);
-}
-
-void ren_save(int nstate, int torg)
-{
-	rstate = &rstates[nstate];
-	rstate->ren_torg = torg;
 }
 
 /* specify the screen position of the characters in s */
@@ -117,16 +102,12 @@ int *ren_position(char *s, char ***chrs, int *n)
 		return rstate->ren_lastpos;
 	} else
 		ren_done();
-	int i;
 	chrs[0] = uc_chop(s, n);
-	int nn = *n;
-	int *off, *pos;
-	int cpos = 0;
-	int size = (nn + 1) * sizeof(pos[0]);
-	pos = malloc(size*2);
-	off = pos + nn+1;
+	int i, *off, *pos, nn = *n, cpos = 0;
+	pos = malloc(((nn + 1) * sizeof(pos[0])) * 2);
 	if (xorder && dir_reorder(chrs[0], pos, nn))
 	{
+		off = &pos[nn+1];
 		for (i = 0; i < nn; i++)
 			off[pos[i]] = i;
 		for (i = 0; i < nn; i++) {
@@ -148,23 +129,23 @@ int *ren_position(char *s, char ***chrs, int *n)
 }
 
 /* find the next character after visual position p; if cur, start from p itself */
-static int pos_next(int *pos, int n, int p, int cur)
+static int *pos_next(int *pos, int n, int p, int cur)
 {
 	int i, ret = -1;
 	for (i = 0; i < n; i++)
 		if (pos[i] - !cur >= p && (ret < 0 || pos[i] < pos[ret]))
 			ret = i;
-	return ret >= 0 ? pos[ret] : -1;
+	return ret >= 0 ? &pos[ret] : &pos[n];
 }
 
 /* find the previous character after visual position p; if cur, start from p itself */
-static int pos_prev(int *pos, int n, int p, int cur)
+static int *pos_prev(int *pos, int n, int p, int cur)
 {
 	int i, ret = -1;
 	for (i = 0; i < n; i++)
 		if (pos[i] + !cur <= p && (ret < 0 || pos[i] > pos[ret]))
 			ret = i;
-	return ret >= 0 ? pos[ret] : -1;
+	return ret >= 0 ? &pos[ret] : &pos[n];
 }
 
 /* convert character offset to visual position */
@@ -180,16 +161,11 @@ int ren_pos(char *s, int off)
 /* convert visual position to character offset */
 int ren_off(char *s, int p)
 {
-	int off = -1;
 	int n;
 	char **c;
 	int *pos = ren_position(s, &c, &n);
-	int i;
-	p = pos_prev(pos, n, p, 1);
-	for (i = 0; i < n; i++)
-		if (pos[i] == p)
-			off = i;
-	return off >= 0 ? off : 0;
+	int *ch = pos_prev(pos, n, p, 1);
+	return ch - pos;
 }
 
 /* adjust cursor position */
@@ -201,12 +177,11 @@ int ren_cursor(char *s, int p)
 	if (!s)
 		return 0;
 	pos = ren_position(s, &c, &n);
-	p = pos_prev(pos, n, p, 1);
+	p = *pos_prev(pos, n, p, 1);
 	if (*uc_chr(s, ren_off(s, p)) == '\n')
-		p = pos_prev(pos, n, p, 0);
-	next = pos_next(pos, n, p, 0);
-	p = (next >= 0 ? next : pos[n]) - 1;
-	return p >= 0 ? p : 0;
+		p = *pos_prev(pos, n, p, 0);
+	next = *pos_next(pos, n, p, 0) - 1;
+	return next >= 0 ? next : 0;
 }
 
 /* return an offset before EOL */
@@ -224,18 +199,18 @@ int ren_next(char *s, int p, int dir)
 	int n;
 	char **c;
 	int *pos = ren_position(s, &c, &n);
-	p = pos_prev(pos, n, p, 1);
+	p = *pos_prev(pos, n, p, 1);
 	if (dir >= 0)
-		p = pos_next(pos, n, p, 0);
+		p = *pos_next(pos, n, p, 0);
 	else
-		p = pos_prev(pos, n, p, 0);
+		p = *pos_prev(pos, n, p, 0);
 	return s && uc_chr(s, ren_off(s, p))[0] != '\n' ? p : -1;
 }
 
 int ren_cwid(char *s, int pos)
 {
 	if (s[0] == '\t')
-		return xtabspc - ((pos + rstate->ren_torg) & (xtabspc-1));
+		return xtabspc - (pos & (xtabspc-1));
 	int c; uc_code(c, s)
 	for (int i = 0; i < placeholderslen; i++)
 		if (placeholders[i].cp == c)
@@ -243,7 +218,7 @@ int ren_cwid(char *s, int pos)
 	return uc_wid(c);
 }
 
-char *ren_translate(char *s, char *ln, int pos, int end)
+char *ren_translate(char *s, char *ln)
 {
 	int c; uc_code(c, s)
 	for (int i = 0; i < placeholderslen; i++)
@@ -252,7 +227,7 @@ char *ren_translate(char *s, char *ln, int pos, int end)
 	if (uc_acomb(c)) {
 		static char buf[16];
 		uc_len(c, s)
-		sprintf(buf, "ـ%.*s", pos > end ? 0 : c, s);
+		sprintf(buf, "ـ%.*s", c, s);
 		return buf;
 	}
 	if (uc_isbell(c))
@@ -260,12 +235,12 @@ char *ren_translate(char *s, char *ln, int pos, int end)
 	return !xshape ? NULL : uc_shape(ln, s);
 }
 
-#define NFTS		20
+#define NFTS		30
 /* mapping filetypes to regular expression sets */
 static struct ftmap {
-	char ft[32];
 	int setbidx;
 	int seteidx;
+	char *ft;
 	rset *rs;
 } ftmap[NFTS];
 static int ftmidx;
@@ -278,27 +253,34 @@ static int blockcont;
 int syn_reload;
 int syn_blockhl;
 
-static int syn_find(char *ft)
+static void syn_initft(int fti, int n, char *name)
 {
-	for (int i = 0; i < ftmidx; i++)
-		if (!strcmp(ft, ftmap[i].ft))
-			return i;
-	return -1;
+	int i = n;
+	char *pats[hlslen];
+	for (; i < hlslen && !strcmp(hls[i].ft, name); i++)
+		pats[i - n] = hls[i].pat;
+	ftmap[fti].setbidx = n;
+	ftmap[fti].ft = name;
+	ftmap[fti].rs = rset_make(i - n, pats, 0);
+	ftmap[fti].seteidx = i;
 }
 
-int syn_merge(int old, int new)
-{
-	int fg = SYN_FGSET(new) ? SYN_FG(new) : SYN_FG(old);
-	int bg = SYN_BGSET(new) ? SYN_BG(new) : SYN_BG(old);
-	return ((old | new) & SYN_FLG) | (bg << 8) | fg;
-}
-
-void syn_setft(char *ft)
+char *syn_setft(char *ft)
 {
 	for (int i = 1; i < 4; i++)
 		syn_addhl(NULL, i, 0);
-	if ((ftidx = syn_find(ft)) < 0)
-		ftidx = 0;
+	for (int i = 0; i < ftmidx; i++)
+		if (!strcmp(ft, ftmap[i].ft)) {
+			ftidx = i;
+			return ftmap[ftidx].ft;
+		}
+	for (int i = 0; i < hlslen; i++)
+		if (!strcmp(ft, hls[i].ft)) {
+			ftidx = ftmidx;
+			syn_initft(ftmidx++, i, hls[i].ft);
+			break;
+		}
+	return ftmap[ftidx].ft;
 }
 
 void syn_scdir(int scdir)
@@ -307,6 +289,13 @@ void syn_scdir(int scdir)
 		last_scdir = scdir;
 		syn_blockhl = 0;
 	}
+}
+
+int syn_merge(int old, int new)
+{
+	int fg = SYN_FGSET(new) ? SYN_FG(new) : SYN_FG(old);
+	int bg = SYN_BGSET(new) ? SYN_BG(new) : SYN_BG(old);
+	return ((old | new) & SYN_FLG) | (bg << 8) | fg;
 }
 
 void syn_highlight(int *att, char *s, int n)
@@ -324,10 +313,10 @@ void syn_highlight(int *att, char *s, int n)
 			for (i = 0; i < LEN(subs) / 2; i++)
 				if (subs[i * 2] >= 0)
 					blk = i;
-			blkm += blkm > hls[hl].blkend ? -1 : 1;
+			blkm += blkm > abs(hls[hl].blkend) ? -1 : 1;
 			if (blkm == 1 && last_scdir > 0)
-				blkend = 1;
-			if (syn_blockhl == hl && blk == blkend)
+				blkend = blkend < 0 ? -1 : 1;
+			if (syn_blockhl == hl && blk == abs(blkend))
 				syn_blockhl = 0;
 			else if (!syn_blockhl && blk != blkend) {
 				syn_blockhl = hl;
@@ -361,31 +350,21 @@ void syn_highlight(int *att, char *s, int n)
 			att[j] = blockcont && att[j] ? att[j] : *blockatt;
 }
 
-static void syn_initft(int fti, int *n, char *name)
-{
-	int i = *n;
-	char *pats[hlslen];
-	for (; i < hlslen && !strcmp(hls[i].ft, name); i++)
-		pats[i - *n] = hls[i].pat;
-	ftmap[fti].setbidx = *n;
-	strcpy(ftmap[fti].ft, name);
-	ftmap[fti].rs = rset_make(i - *n, pats, 0);
-	*n += i - *n;
-	ftmap[fti].seteidx = *n;
-}
-
 char *syn_filetype(char *path)
 {
 	int hl = rset_find(syn_ftrs, path, 0, NULL, 0);
-	return hl >= 0 && hl < ftslen ? fts[hl].ft : "/";
+	return hl >= 0 && hl < ftslen ? fts[hl].ft : hls[0].ft;
 }
 
-void syn_reloadft()
+void syn_reloadft(void)
 {
 	if (syn_reload) {
-		int hlset = ftmap[ftidx].setbidx;
-		rset_free(ftmap[ftidx].rs);
-		syn_initft(ftidx, &hlset, ftmap[ftidx].ft);
+		rset *rs = ftmap[ftidx].rs;
+		syn_initft(ftidx, ftmap[ftidx].setbidx, ftmap[ftidx].ft);
+		if (!ftmap[ftidx].rs) {
+			ftmap[ftidx].rs = rs;	
+		} else
+			rset_free(rs);
 		syn_reload = 0;
 	}
 }
@@ -404,17 +383,8 @@ int syn_addhl(char *reg, int func, int reload)
 void syn_init(void)
 {
 	char *pats[ftslen];
-	int i;
-	for (i = 0; i < hlslen; ftmidx++)
-		syn_initft(ftmidx, &i, hls[i].ft);
-	for (i = 0; i < ftslen; i++)
+	int i = 0;
+	for (; i < ftslen; i++)
 		pats[i] = fts[i].pat;
 	syn_ftrs = rset_make(i, pats, 0);
-}
-
-void syn_done(void)
-{
-	for (; ftmidx >= 0; ftmidx--)
-		rset_free(ftmap[ftmidx].rs);
-	rset_free(syn_ftrs);
 }

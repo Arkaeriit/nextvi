@@ -7,25 +7,26 @@
 #define NEXTVI_REG_NOTBOL	0x04
 #define NEXTVI_REG_NOTEOL	0x08
 typedef struct {
-	char *rm_so;
-	char *rm_eo;
+    char *rm_so;
+    char *rm_eo;
 } nextvi_regmatch_t;
 typedef struct {
-	int unilen;
-	int len;
-	int sub;
-	int presub;
-	int splits;
-	int flg;
-	int insts[];
+    int unilen; /* number of integers in insts */
+    int len;    /* number of atoms/instructions */
+    int sub;    /* interim val = save count; final val = nsubs size */
+    int presub; /* interim val = save count; final val = 1 rsub size */
+    int splits; /* number of split insts */
+    int sparsesz;   /* sdense size */
+    int flg;    /* stored flags */
+    int insts[];    /* re code */
 } rcode;
 /* regular expression set */
 typedef struct {
-	rcode *regex;		/* the combined regular expression */
-	int n;			/* number of regular expressions in this set */
-	int *grp;		/* the group assigned to each subgroup */
-	int *setgrpcnt;		/* number of groups in each regular expression */
-	int grpcnt;		/* group count */
+    rcode *regex;       /* the combined regular expression */
+    int n;          /* number of regular expressions in this set */
+    int *grp;       /* the group assigned to each subgroup */
+    int *setgrpcnt;     /* number of groups in each regular expression */
+    int grpcnt;     /* group count */
 } rset;
 rset *rset_make(int n, char **pat, int flg);
 int rset_find(rset *re, char *s, int n, int *grps, int flg);

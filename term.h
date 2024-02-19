@@ -1,11 +1,11 @@
 #ifndef TERM_H
 #define TERM_H
 
-#define xrows		(term_rows())
-#define xcols		(term_cols())
 extern sbuf *term_sbuf;
 extern int term_record;
+extern int xcols, xrows;
 extern unsigned int ibuf_pos, ibuf_cnt, icmd_pos;
+void term_write(const char* data, size_t size);
 void term_init(void);
 void term_done(void);
 void term_clean(void);
@@ -37,7 +37,7 @@ char *term_cmd(int *n);
 } \
 
 /* process management */
-char *cmd_pipe(char *cmd, char *s, int iproc, int oproc);
+char *cmd_pipe(char *cmd, char *ibuf, int oproc);
 int cmd_exec(char *cmd);
 char *xgetenv(char* q[]);
 
