@@ -838,24 +838,25 @@ static int ec_glob(const char *loc, char *cmd, char *arg)
 }
 
 static struct nextvi_option {
+	char *abbr;
 	char *name;
 	int *var;
 } options[] = {
-	{"ai", &xai},
-	{"ic", &xic},
-	{"td", &xtd},
-	{"shape", &xshape},
-	{"order", &xorder},
-	{"hl", &xhl},
-	{"hll", &xhll},
-	{"hlw", &xhlw},
-	{"hlp", &xhlp},
-	{"hlr", &xhlr},
-	{"tbs", &xtabspc},
-	{"ish", &xish},
-	{"grp", &xgrp},
-	{"pac", &xpac},
-	{"led", &xled},
+	{"ai", "autoindent", &xai},
+	{"ic", "ignorecase", &xic},
+	{"td", "textdirection", &xtd},
+	{"shape", "shape", &xshape},
+	{"order", "order", &xorder},
+	{"hl", "highlight", &xhl},
+	{"hll", "highlightline", &xhll},
+	{"hlw", "highlightword", &xhlw},
+	{"hlp", "highlightpair", &xhlp},
+	{"hlr", "highlightreverse", &xhlr},
+	{"tbs", "tabstop", &xtabspc},
+	{"ish", "interactivehsell", &xish},
+	{"grp", "searchgroup", &xgrp},
+	{"pac", "printautocomplete", &xpac},
+	{"led", "lineeditor", &xled},
 };
 
 static char *cutword(char *s, char *d)
@@ -896,7 +897,7 @@ static int ec_set(const char *loc, char *cmd, char *arg)
 		}
 		for (i = 0; i < LEN(options); i++) {
 			struct nextvi_option *o = &options[i];
-			if (!strcmp(o->name, opt)) {
+			if (!strcmp(o->name, opt) || !strcmp(o->abbr, opt)) {
 				*o->var = val;
 				return 0;
 			}
@@ -961,60 +962,61 @@ static int ec_setbufsmax(const char *loc, char *cmd, char *arg)
 }
 
 static struct excmd {
+	char *abbr;
 	char *name;
 	int (*ec)(const char *loc, char *cmd, char *arg);
 } excmds[] = {
-	{"f", ec_search},
-	{"b", ec_buffer},
-	{"bp", ec_setpath},
-	{"bs", ec_save},
-	{"p", ec_print},
-	{"a", ec_insert},
-	{"ea", ec_editapprox},
-	{"ea!", ec_editapprox},
-	{"i", ec_insert},
-	{"d", ec_delete},
-	{"c", ec_insert},
-	{"e", ec_edit},
-	{"e!", ec_edit},
-	{"g", ec_glob},
-	{"g!", ec_glob},
-	{"=", ec_lnum},
-	{"k", ec_mark},
-	{"tp", ec_termpush},
-	{"pu", ec_put},
-	{"q", ec_quit},
-	{"q!", ec_quit},
-	{"r", ec_read},
-	{"v", ec_glob},
-	{"w", ec_write},
-	{"w!", ec_write},
-	{"wq", ec_write},
-	{"wq!", ec_write},
-	{"u", ec_undo},
-	{"rd", ec_redo},
-	{"se", ec_set},
-	{"s", ec_substitute},
-	{"x", ec_write},
-	{"x!", ec_write},
-	{"ya", ec_yank},
-	{"!", ec_exec},
-	{"ft", ec_ft},
-	{"cm", ec_cmap},
-	{"cm!", ec_cmap},
-	{"fd", ec_setdir},
-	{"fp", ec_setdir},
-	{"cd", ec_chdir},
-	{"inc", ec_setincl},
-	{"bx", ec_setbufsmax},
-	{"ac", ec_setacreg},
-	{"", ec_null},
+	{"a", "append", ec_insert},
+    {"ac", "setacreg", ec_setacreg},
+	{"b", "buffer", ec_buffer},
+	{"bp", "bprevious", ec_setpath},
+	{"bs", "buffersave", ec_save},
+	{"d", "delete", ec_delete},
+	{"c", "change", ec_insert},
+    {"cd", "cd", ec_chdir},
+	{"cm", "cmap", ec_cmap},
+	{"cm!", "cmap!", ec_cmap},
+	{"e", "edit", ec_edit},
+	{"e!", "edit!", ec_edit},
+	{"ea", "editapprox", ec_editapprox},
+	{"ea!", "editapprox!", ec_editapprox},
+	{"ew", "ew", ec_edit},
+	{"ew!", "ew!", ec_edit},
+	{"fd", "fsearchdir", ec_setdir},
+	{"ft", "filetype", ec_ft},
+	{"fp", "fp", ec_setdir},
+	{"g", "global", ec_glob},
+	{"g!", "global!", ec_glob},
+	{"i", "insert", ec_insert},
+    {"icl", "setincl", ec_setincl},
+	{"k", "mark", ec_mark},
+	{"p", "print", ec_print},
+	{"pu", "put", ec_put},
+	{"q", "quit", ec_quit},
+	{"q!", "quit!", ec_quit},
+	{"r", "read", ec_read},
+	{"redo", "redo", ec_redo},
+	{"se", "set", ec_set},
+	{"s", "substitute", ec_substitute},
+	{"tp", "termpush", ec_termpush},
+	{"u", "undo", ec_undo},
+	{"v", "vglobal", ec_glob},
+	{"w", "write", ec_write},
+	{"w!", "write!", ec_write},
+	{"wq", "wq", ec_write},
+	{"wq!", "wq!", ec_write},
+	{"x", "xit", ec_write},
+	{"x!", "xit!", ec_write},
+	{"y", "yank", ec_yank},
+	{"!", "!", ec_exec},
+	{"=", "=", ec_lnum},
+	{"", "", ec_null},
 };
 
 static int ex_idx(const char *cmd)
 {
 	for (int i = 0; i < LEN(excmds); i++)
-		if (!strcmp(excmds[i].name, cmd))
+		if (!strcmp(excmds[i].name, cmd) || !strcmp(excmds[i].abbr, cmd))
 			return i;
 	return -1;
 }

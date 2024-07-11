@@ -289,8 +289,7 @@ line will be wrapped onto the next one. This is behavior you can expect from
 52. Made feature of reverse text highlight toggleable via new ex option "hlr"
 53. Added a key to disable autoindent. keybind: va
 This is necessary sometimes if you want to paste from system clipboard.
-54. Removed full names of ex commands and options, (seriously, who uses that?)
-now only short and fast to type abbreviations work.
+54. Kept full names of ex commands and options, (usefull for scripts)
 55. Substitute undo-redo point return to where command was issued initially
 if the affected area is greater than terminal rows.
 56. Modified regex engine to support more than 1 character in negated char
