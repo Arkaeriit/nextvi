@@ -354,7 +354,8 @@ separate instance. Still, a great amount of care and understanding is needed
 when making such complicated macros.
 71. The arrow keys can be used as an alternative to hjkl for motion.
 72. There is `--help` and `--version` command line arguments to show some help messages.
-73. Nextvi special character escapes work mostly the same way everywhere
+73. `zz` in normal mode centers the screen.
+74. Nextvi special character escapes work mostly the same way everywhere
 except the following situations:
 ```
  - Escapes in regex bracket expressions. This isn't posix but it solves

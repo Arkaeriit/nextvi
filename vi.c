@@ -1813,9 +1813,11 @@ void vi(int init)
 				k = vi_read();
 				switch (k) {
 				case 'z':
-					xquit = 2;
-					term_push("\n", 1);
-					break;
+                    if (mv == 1 && xrow < otop + xrows - 1)
+                        break;
+                    xtop = MAX(0, xrow - xrows / 2);
+                    vi_mod = 1;
+                    break;
 				case '\n':
 					xtop = vi_arg1 ? vi_arg1 : xrow;
 					break;
